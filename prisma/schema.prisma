@@ -1,0 +1,131 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// Modelo para el administrador del sitio
+model Admin {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String   // En producción debe estar hasheado
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("admins")
+}
+
+// Modelo para la configuración del sitio
+model SiteConfig {
+  id            String @id @default(cuid())
+  companyName   String
+  logo          String?
+  primaryColor  String @default("#f97316") // Orange-500
+  secondaryColor String @default("#64748b") // Gray-500
+  phone         String?
+  email         String?
+  address       String?
+  description   String?
+
+  // Redes sociales
+  facebook      String?
+  instagram     String?
+  twitter       String?
+  linkedin      String?
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // Relación con los bloques
+  blocks        SiteBlock[]
+
+  @@map("site_configs")
+}
+
+// Modelo para los bloques del sitio
+model SiteBlock {
+  id          String @id @default(cuid())
+  type        String // 'hero', 'featured-properties', 'search', 'company-info'
+  position    Int    // Orden de aparición
+  visible     Boolean @default(true)
+  config      String // JSON con la configuración específica del bloque
+
+  // Relación con configuración del sitio
+  siteConfigId String
+  siteConfig   SiteConfig @relation(fields: [siteConfigId], references: [id], onDelete: Cascade)
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("site_blocks")
+}
+
+// Modelo para propiedades
+model Property {
+  id          String   @id @default(cuid())
+  title       String
+  description String
+  price       Float
+  location    String
+  bedrooms    Int
+  bathrooms   Int
+  area        Float
+  images      String   // JSON array de URLs de imágenes
+  featured    Boolean  @default(false)
+  status      String   // 'available', 'sold', 'rented'
+  type        String   // 'sale', 'rent'
+  agentId     String?
+  agent       Agent?   @relation(fields: [agentId], references: [id])
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relación con contactos
+  contacts    Contact[]
+
+  @@map("properties")
+}
+
+// Modelo para agentes
+model Agent {
+  id         String     @id @default(cuid())
+  name       String
+  email      String     @unique
+  phone      String?
+  photo      String?
+  bio        String?
+
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+
+  // Relación con propiedades
+  properties Property[]
+
+  @@map("agents")
+}
+
+// Modelo para contactos/consultas
+model Contact {
+  id         String   @id @default(cuid())
+  name       String
+  email      String
+  phone      String?
+  message    String
+  status     String   @default("new") // 'new', 'replied', 'closed'
+
+  // Relación con propiedad (opcional)
+  propertyId String?
+  property   Property? @relation(fields: [propertyId], references: [id])
+
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@map("contacts")
+}
