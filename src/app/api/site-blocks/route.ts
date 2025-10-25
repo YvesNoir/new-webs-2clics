@@ -35,7 +35,14 @@ export async function GET() {
             type: 'featured-properties',
             position: 2,
             visible: true,
-            config: JSON.stringify({ name: 'Propiedades Destacadas', description: 'Grid de propiedades principales' }),
+            config: JSON.stringify({ name: 'Últimas propiedades', description: 'Muestra los inmuebles que fueron cargados más recientemente.' }),
+            siteConfigId: siteConfig.id
+          },
+          {
+            type: 'popular-neighborhoods',
+            position: 3,
+            visible: true,
+            config: JSON.stringify({ name: 'Barrios Populares', description: 'Muestra los barrios con mayor cantidad de propiedades disponibles.' }),
             siteConfigId: siteConfig.id
           }
         ]

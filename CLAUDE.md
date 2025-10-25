@@ -101,3 +101,15 @@ npm run typecheck    # Verificación TypeScript
 5. Implementar autenticación básica
 6. Desarrollar primer bloque (Hero Banner)
 7. Crear panel admin básico
+
+# IMPORTANTE - IDIOMA
+SIEMPRE responde en CASTELLANO/ESPAÑOL.
+NUNCA respondas en inglés, sin importar el contexto o la pregunta.
+Todas las respuestas, explicaciones, comentarios y comunicación debe ser en castellano.
+Los nombres de variables, funciones y archivos pueden seguir convenciones en inglés, pero toda explicación debe ser en castellano.
+
+# important-instruction-reminders
+Do what has been asked; nothing more, nothing less.
+NEVER create files unless they're absolutely necessary for achieving your goal.
+ALWAYS prefer editing an existing file to creating a new one.
+NEVER proactively create documentation files (*.md) or README files. Only create documentation files if explicitly requested by the User.

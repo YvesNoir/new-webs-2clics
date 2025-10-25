@@ -6,9 +6,41 @@ import { useRouter } from 'next/navigation'
 export default function AdminDashboard() {
   const [isLoading, setIsLoading] = useState(true)
   const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [activeTab, setActiveTab] = useState<'site-config' | 'page-config' | 'contact-config'>('site-config')
+  const [isSaving, setIsSaving] = useState(false)
+  const [saveMessage, setSaveMessage] = useState('')
+  const [isSavingPage, setIsSavingPage] = useState(false)
+  const [pageSaveMessage, setPageSaveMessage] = useState('')
+  const [isUploadingLogo, setIsUploadingLogo] = useState(false)
+  const [isUploadingFavicon, setIsUploadingFavicon] = useState(false)
   const [siteConfig, setSiteConfig] = useState({
-    companyName: 'Inmobiliaria Homez',
-    primaryColor: '#f97316'
+    // Información básica
+    companyName: '',
+    siteTitle: '',
+    siteDescription: '',
+    logo: '',
+    favicon: '',
+
+    // Información de contacto
+    address: '',
+    schedule: '',
+    phone: '',
+    whatsapp: '',
+    email: '',
+
+    // Colores
+    primaryColor: '#f97316',
+    secondaryColor: '#1f2937',
+    tagColor: '#10b981',
+
+    // Hero Banner
+    heroVariant: 'variant1',
+
+    // Redes sociales
+    facebook: '',
+    instagram: '',
+    twitter: '',
+    linkedin: ''
   })
   const [siteBlocks, setSiteBlocks] = useState([])
   const iframeRef = useRef<HTMLIFrameElement>(null)
@@ -45,7 +77,28 @@ export default function AdminDashboard() {
 
       if (configResponse.ok) {
         const config = await configResponse.json()
-        setSiteConfig(config)
+        setSiteConfig({
+          companyName: config.companyName || '',
+          siteTitle: config.siteTitle || '',
+          siteDescription: config.siteDescription || '',
+          logo: config.logo || '',
+          favicon: config.favicon || '',
+          address: config.address || '',
+          schedule: config.schedule || '',
+          phone: config.phone || '',
+          whatsapp: config.whatsapp || '',
+          email: config.email || '',
+          primaryColor: config.primaryColor || '#f97316',
+          secondaryColor: config.secondaryColor || '#1f2937',
+          tagColor: config.tagColor || '#10b981',
+          heroVariant: config.heroVariant || 'variant1',
+          facebook: config.facebook || '',
+          instagram: config.instagram || '',
+          twitter: config.twitter || '',
+          linkedin: config.linkedin || '',
+          tiktok: config.tiktok || '',
+          youtube: config.youtube || ''
+        })
       }
 
       if (blocksResponse.ok) {
@@ -58,6 +111,9 @@ export default function AdminDashboard() {
   }
 
   const updateSiteConfig = async (newConfig: typeof siteConfig) => {
+    setIsSaving(true)
+    setSaveMessage('')
+
     try {
       const response = await fetch('/api/site-config', {
         method: 'PUT',
@@ -69,11 +125,117 @@ export default function AdminDashboard() {
       })
 
       if (response.ok) {
-        setSiteConfig(newConfig)
+        setSaveMessage('¡Configuración guardada exitosamente!')
+        // Refrescar el preview después de guardar en el servidor
         refreshPreview()
+
+        // Limpiar mensaje después de 3 segundos
+        setTimeout(() => {
+          setSaveMessage('')
+        }, 3000)
+      } else {
+        setSaveMessage('Error al guardar la configuración')
       }
     } catch (error) {
       console.error('Error updating site config:', error)
+      setSaveMessage('Error al guardar la configuración')
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
+  // Función para guardar configuración de la página (heroVariant)
+  const updatePageConfig = async () => {
+    setIsSavingPage(true)
+    setPageSaveMessage('')
+
+    try {
+      // Guardar solo el heroVariant en la configuración del sitio
+      const response = await fetch('/api/site-config', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          ...siteConfig,
+          heroVariant: siteConfig.heroVariant
+        }),
+        credentials: 'include'
+      })
+
+      if (response.ok) {
+        setPageSaveMessage('¡Configuración de la página guardada exitosamente!')
+        // Refrescar el preview después de guardar en el servidor
+        refreshPreview()
+
+        // Limpiar mensaje después de 3 segundos
+        setTimeout(() => {
+          setPageSaveMessage('')
+        }, 3000)
+      } else {
+        setPageSaveMessage('Error al guardar la configuración de la página')
+      }
+    } catch (error) {
+      console.error('Error updating page config:', error)
+      setPageSaveMessage('Error al guardar la configuración de la página')
+    } finally {
+      setIsSavingPage(false)
+    }
+  }
+
+  // Función para actualizar config sin guardar (solo preview en tiempo real)
+  const updateSiteConfigLocal = (newConfig: typeof siteConfig) => {
+    setSiteConfig(newConfig)
+
+    // Enviar los cambios al iframe vía postMessage para actualización inmediata del preview
+    if (iframeRef.current?.contentWindow) {
+      iframeRef.current.contentWindow.postMessage({
+        type: 'updateSiteConfig',
+        config: newConfig
+      }, '*')
+    }
+  }
+
+  // Función para subir archivos (logo o favicon)
+  const handleFileUpload = async (file: File, type: 'logo' | 'favicon') => {
+    if (type === 'logo') setIsUploadingLogo(true)
+    if (type === 'favicon') setIsUploadingFavicon(true)
+
+    try {
+      const formData = new FormData()
+      formData.append('file', file)
+      formData.append('type', type)
+
+      const response = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData,
+        credentials: 'include'
+      })
+
+      if (response.ok) {
+        const result = await response.json()
+
+        // Actualizar configuración con la nueva URL
+        const updatedConfig = {
+          ...siteConfig,
+          [type]: result.url
+        }
+
+        updateSiteConfigLocal(updatedConfig)
+
+        // Mostrar mensaje de éxito
+        setSaveMessage(`${type === 'logo' ? 'Logo' : 'Favicon'} subido exitosamente`)
+        setTimeout(() => setSaveMessage(''), 3000)
+      } else {
+        const error = await response.json()
+        setSaveMessage(`Error al subir ${type === 'logo' ? 'logo' : 'favicon'}: ${error.error}`)
+      }
+    } catch (error) {
+      console.error(`Error uploading ${type}:`, error)
+      setSaveMessage(`Error al subir ${type === 'logo' ? 'logo' : 'favicon'}`)
+    } finally {
+      if (type === 'logo') setIsUploadingLogo(false)
+      if (type === 'favicon') setIsUploadingFavicon(false)
     }
   }
 
@@ -143,125 +305,788 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center space-x-3">
-              <div className="w-8 h-8 bg-orange-500 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-sm">H</span>
-              </div>
-              <h1 className="text-xl font-semibold text-gray-900">
-                Panel de Administración
-              </h1>
-            </div>
-
-            <button
-              onClick={handleLogout}
-              className="text-gray-600 hover:text-gray-900 font-medium"
-            >
-              Cerrar Sesión
-            </button>
-          </div>
-        </div>
-      </header>
-
-      {/* Main Content */}
-      <main className="flex h-[calc(100vh-64px)]">
+    <div className="min-h-screen bg-gray-50 relative">
+      {/* Main Content - Pantalla Completa */}
+      <main className="flex h-screen">
         {/* Panel de Control - Izquierda (20%) */}
         <div className="w-1/5 bg-white border-r border-gray-200 overflow-y-auto">
-            <div className="p-6 border-b">
-              <h2 className="text-lg font-semibold text-gray-900">
-                Configuración del Sitio
-              </h2>
-              <p className="text-sm text-gray-600 mt-1">
-                Personaliza los bloques y el contenido de tu sitio web
-              </p>
+            {/* Selector de Configuración */}
+            <div className="p-6 border-b bg-gradient-to-r from-orange-50 to-orange-100">
+              <div className="flex items-center space-x-3 mb-4">
+                <div className="w-10 h-10 bg-orange-500 rounded-lg flex items-center justify-center">
+                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4" />
+                  </svg>
+                </div>
+                <h2 className="text-xl font-bold text-gray-900">
+                  Panel de Configuración
+                </h2>
+              </div>
+              <div className="bg-gray-100 p-1 rounded-lg">
+                <button
+                  onClick={() => setActiveTab('site-config')}
+                  className={`w-full py-2 px-3 text-sm font-medium rounded-md transition-colors ${
+                    activeTab === 'site-config'
+                      ? 'bg-white text-gray-900 shadow-sm'
+                      : 'text-gray-600 hover:text-gray-900'
+                  }`}
+                >
+                  Configuración del Sitio Web
+                </button>
+                <button
+                  onClick={() => setActiveTab('page-config')}
+                  className={`w-full py-2 px-3 text-sm font-medium rounded-md transition-colors mt-1 ${
+                    activeTab === 'page-config'
+                      ? 'bg-white text-gray-900 shadow-sm'
+                      : 'text-gray-600 hover:text-gray-900'
+                  }`}
+                >
+                  Configuración de la Página de Inicio
+                </button>
+                <button
+                  onClick={() => setActiveTab('contact-config')}
+                  className={`w-full py-2 px-3 text-sm font-medium rounded-md transition-colors mt-1 ${
+                    activeTab === 'contact-config'
+                      ? 'bg-white text-gray-900 shadow-sm'
+                      : 'text-gray-600 hover:text-gray-900'
+                  }`}
+                >
+                  Configuración de Contacto
+                </button>
+              </div>
             </div>
 
             <div className="p-6">
-              {/* Información de la Empresa */}
-              <div className="mb-8">
-                <h3 className="text-md font-medium text-gray-900 mb-4">
-                  Información de la Empresa
-                </h3>
-                <div className="space-y-4">
+              {activeTab === 'site-config' && (
+                <div className="space-y-6">
+                  {/* Información Básica */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Nombre de la Empresa
-                    </label>
-                    <input
-                      type="text"
-                      value={siteConfig.companyName}
-                      onChange={(e) => updateSiteConfig({ ...siteConfig, companyName: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-orange-500 focus:border-orange-500"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Color Principal
-                    </label>
-                    <div className="flex items-center space-x-3">
-                      <input
-                        type="color"
-                        value={siteConfig.primaryColor}
-                        onChange={(e) => updateSiteConfig({ ...siteConfig, primaryColor: e.target.value })}
-                        className="w-12 h-10 border border-gray-300 rounded-md"
-                      />
-                      <span className="text-sm text-gray-500">{siteConfig.primaryColor}</span>
+                    <h3 className="text-md font-medium text-gray-900 mb-4">
+                      Información Básica
+                    </h3>
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Título del Sitio
+                        </label>
+                        <input
+                          type="text"
+                          value={siteConfig.siteTitle}
+                          onChange={(e) => updateSiteConfigLocal({ ...siteConfig, siteTitle: e.target.value })}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-orange-500 focus:border-orange-500"
+                          placeholder="Ej: Inmobiliaria Homez - Propiedades de Calidad"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Descripción del Sitio
+                        </label>
+                        <textarea
+                          value={siteConfig.siteDescription}
+                          onChange={(e) => updateSiteConfigLocal({ ...siteConfig, siteDescription: e.target.value })}
+                          rows={3}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-orange-500 focus:border-orange-500"
+                          placeholder="Descripción breve de tu inmobiliaria..."
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Logo de la Inmobiliaria
+                        </label>
+                        <div className="space-y-3">
+                          {siteConfig.logo && (
+                            <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
+                              <img
+                                src={siteConfig.logo}
+                                alt="Logo actual"
+                                className="w-12 h-12 object-cover rounded"
+                              />
+                              <div className="flex-1">
+                                <p className="text-sm text-gray-600">Logo actual</p>
+                                <p className="text-xs text-gray-400">{siteConfig.logo}</p>
+                              </div>
+                            </div>
+                          )}
+                          <div className="relative">
+                            <input
+                              type="file"
+                              accept="image/jpeg,image/jpg,image/png,image/svg+xml,image/webp"
+                              onChange={(e) => {
+                                const file = e.target.files?.[0]
+                                if (file) {
+                                  handleFileUpload(file, 'logo')
+                                }
+                              }}
+                              disabled={isUploadingLogo}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-orange-500 focus:border-orange-500 disabled:opacity-50"
+                            />
+                            {isUploadingLogo && (
+                              <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-orange-500"></div>
+                              </div>
+                            )}
+                          </div>
+                          <p className="text-xs text-gray-500">
+                            Formatos: JPG, PNG, SVG, WebP. Tamaño recomendado: 200x200px
+                          </p>
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Favicon
+                        </label>
+                        <div className="space-y-3">
+                          {siteConfig.favicon && (
+                            <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
+                              <img
+                                src={siteConfig.favicon}
+                                alt="Favicon actual"
+                                className="w-8 h-8 object-cover rounded"
+                              />
+                              <div className="flex-1">
+                                <p className="text-sm text-gray-600">Favicon actual</p>
+                                <p className="text-xs text-gray-400">{siteConfig.favicon}</p>
+                              </div>
+                            </div>
+                          )}
+                          <div className="relative">
+                            <input
+                              type="file"
+                              accept="image/x-icon,image/vnd.microsoft.icon,image/png,image/svg+xml"
+                              onChange={(e) => {
+                                const file = e.target.files?.[0]
+                                if (file) {
+                                  handleFileUpload(file, 'favicon')
+                                }
+                              }}
+                              disabled={isUploadingFavicon}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-orange-500 focus:border-orange-500 disabled:opacity-50"
+                            />
+                            {isUploadingFavicon && (
+                              <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-orange-500"></div>
+                              </div>
+                            )}
+                          </div>
+                          <p className="text-xs text-gray-500">
+                            Formatos: ICO, PNG, SVG. Tamaño recomendado: 32x32px o 16x16px
+                          </p>
+                        </div>
+                      </div>
                     </div>
                   </div>
-                </div>
-              </div>
 
-              {/* Gestión de Bloques */}
-              <div>
-                <h3 className="text-md font-medium text-gray-900 mb-4">
-                  Bloques del Sitio
-                </h3>
-                <div className="space-y-3">
-                  {siteBlocks.map((block: any) => {
-                    const getBlockIcon = (type: string) => {
-                      switch (type) {
-                        case 'hero':
-                          return (
-                            <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
-                              <svg className="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 4V2a1 1 0 011-1h8a1 1 0 011 1v2m-9 4v10a2 2 0 002 2h6a2 2 0 002-2V8M7 8h10" />
-                              </svg>
-                            </div>
-                          )
-                        case 'featured-properties':
-                          return (
-                            <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
-                              <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z" />
-                              </svg>
-                            </div>
-                          )
-                        default:
-                          return (
-                            <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center">
-                              <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" />
-                              </svg>
-                            </div>
-                          )
-                      }
-                    }
+                  {/* Información de Contacto */}
+                  <div>
+                    <h3 className="text-md font-medium text-gray-900 mb-4">
+                      Información de Contacto
+                    </h3>
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Dirección
+                        </label>
+                        <input
+                          type="text"
+                          value={siteConfig.address}
+                          onChange={(e) => updateSiteConfigLocal({ ...siteConfig, address: e.target.value })}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-orange-500 focus:border-orange-500"
+                          placeholder="Ej: Av. Corrientes 1234, CABA"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Horario y Día de Apertura
+                        </label>
+                        <input
+                          type="text"
+                          value={siteConfig.schedule}
+                          onChange={(e) => updateSiteConfigLocal({ ...siteConfig, schedule: e.target.value })}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-orange-500 focus:border-orange-500"
+                          placeholder="Ej: Lun-Vie 9:00-18:00, Sáb 9:00-13:00"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Teléfono
+                        </label>
+                        <input
+                          type="tel"
+                          value={siteConfig.phone}
+                          onChange={(e) => updateSiteConfigLocal({ ...siteConfig, phone: e.target.value })}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-orange-500 focus:border-orange-500"
+                          placeholder="Ej: +54 11 1234-5678"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          WhatsApp
+                        </label>
+                        <input
+                          type="tel"
+                          value={siteConfig.whatsapp}
+                          onChange={(e) => updateSiteConfigLocal({ ...siteConfig, whatsapp: e.target.value })}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-orange-500 focus:border-orange-500"
+                          placeholder="Ej: +54 9 11 1234-5678"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Correo Electrónico
+                        </label>
+                        <input
+                          type="email"
+                          value={siteConfig.email}
+                          onChange={(e) => updateSiteConfigLocal({ ...siteConfig, email: e.target.value })}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-orange-500 focus:border-orange-500"
+                          placeholder="Ej: contacto@inmobiliaria.com"
+                        />
+                      </div>
+                    </div>
+                  </div>
 
-                    const config = JSON.parse(block.config || '{}')
-                    const blockName = config.name || (block.type === 'hero' ? 'Banner Principal' : 'Propiedades Destacadas')
-                    const blockDescription = config.description || (block.type === 'hero' ? 'Sección hero con búsqueda' : 'Grid de propiedades principales')
+                  {/* Redes Sociales */}
+                  <div>
+                    <h3 className="text-md font-medium text-gray-900 mb-4">
+                      Redes Sociales
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Facebook
+                        </label>
+                        <input
+                          type="url"
+                          value={siteConfig.facebook || ''}
+                          onChange={(e) => updateSiteConfigLocal({ ...siteConfig, facebook: e.target.value })}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-orange-500 focus:border-orange-500"
+                          placeholder="https://facebook.com/tu-pagina"
+                        />
+                      </div>
 
-                    return (
-                      <div key={block.id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Instagram
+                        </label>
+                        <input
+                          type="url"
+                          value={siteConfig.instagram || ''}
+                          onChange={(e) => updateSiteConfigLocal({ ...siteConfig, instagram: e.target.value })}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-orange-500 focus:border-orange-500"
+                          placeholder="https://instagram.com/tu-cuenta"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          X (Twitter)
+                        </label>
+                        <input
+                          type="url"
+                          value={siteConfig.twitter || ''}
+                          onChange={(e) => updateSiteConfigLocal({ ...siteConfig, twitter: e.target.value })}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-orange-500 focus:border-orange-500"
+                          placeholder="https://x.com/tu-cuenta"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          LinkedIn
+                        </label>
+                        <input
+                          type="url"
+                          value={siteConfig.linkedin || ''}
+                          onChange={(e) => updateSiteConfigLocal({ ...siteConfig, linkedin: e.target.value })}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-orange-500 focus:border-orange-500"
+                          placeholder="https://linkedin.com/company/tu-empresa"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          TikTok
+                        </label>
+                        <input
+                          type="url"
+                          value={siteConfig.tiktok || ''}
+                          onChange={(e) => updateSiteConfigLocal({ ...siteConfig, tiktok: e.target.value })}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-orange-500 focus:border-orange-500"
+                          placeholder="https://tiktok.com/@tu-cuenta"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          YouTube
+                        </label>
+                        <input
+                          type="url"
+                          value={siteConfig.youtube || ''}
+                          onChange={(e) => updateSiteConfigLocal({ ...siteConfig, youtube: e.target.value })}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-orange-500 focus:border-orange-500"
+                          placeholder="https://youtube.com/c/tu-canal"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Colores */}
+                  <div>
+                    <h3 className="text-md font-medium text-gray-900 mb-4">
+                      Colores del Sitio
+                    </h3>
+                    <div className="space-y-4">
+                      {/* Primera fila: Primario y Secundario */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Color Primario
+                          </label>
+                          <div className="flex items-center space-x-3">
+                            <input
+                              type="color"
+                              value={siteConfig.primaryColor}
+                              onChange={(e) => updateSiteConfigLocal({ ...siteConfig, primaryColor: e.target.value })}
+                              className="w-12 h-10 border border-gray-300 rounded-md"
+                            />
+                            <span className="text-sm text-gray-500">{siteConfig.primaryColor}</span>
+                          </div>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Color Secundario
+                          </label>
+                          <div className="flex items-center space-x-3">
+                            <input
+                              type="color"
+                              value={siteConfig.secondaryColor}
+                              onChange={(e) => updateSiteConfigLocal({ ...siteConfig, secondaryColor: e.target.value })}
+                              className="w-12 h-10 border border-gray-300 rounded-md"
+                            />
+                            <span className="text-sm text-gray-500">{siteConfig.secondaryColor}</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Segunda fila: Color de Etiquetas */}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Color de Etiquetas
+                          <span className="text-xs text-gray-500 ml-2">(para etiquetas de venta/alquiler)</span>
+                        </label>
                         <div className="flex items-center space-x-3">
-                          {getBlockIcon(block.type)}
+                          <input
+                            type="color"
+                            value={siteConfig.tagColor}
+                            onChange={(e) => updateSiteConfigLocal({ ...siteConfig, tagColor: e.target.value })}
+                            className="w-12 h-10 border border-gray-300 rounded-md"
+                          />
+                          <span className="text-sm text-gray-500">{siteConfig.tagColor}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Save Button */}
+                  <div className="pt-6 border-t">
+                    <button
+                      onClick={() => updateSiteConfig(siteConfig)}
+                      disabled={isSaving}
+                      className={`w-full font-medium py-3 px-4 rounded-lg transition-colors ${
+                        isSaving
+                          ? 'bg-gray-400 cursor-not-allowed'
+                          : 'bg-orange-500 hover:bg-orange-600'
+                      } text-white`}
+                    >
+                      {isSaving ? (
+                        <div className="flex items-center justify-center space-x-2">
+                          <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                            <path className="opacity-75" fill="currentColor" d="m4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                          </svg>
+                          <span>Guardando...</span>
+                        </div>
+                      ) : (
+                        'Guardar Configuración del Sitio'
+                      )}
+                    </button>
+
+                    {/* Save Message */}
+                    {saveMessage && (
+                      <div className={`mt-3 p-3 rounded-lg text-sm text-center ${
+                        saveMessage.includes('Error')
+                          ? 'bg-red-100 text-red-700 border border-red-200'
+                          : 'bg-green-100 text-green-700 border border-green-200'
+                      }`}>
+                        <div className="flex items-center justify-center space-x-2">
+                          {saveMessage.includes('Error') ? (
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                          ) : (
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                            </svg>
+                          )}
+                          <span>{saveMessage}</span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {activeTab === 'page-config' && (
+                <div className="space-y-6">
+                  {/* Configuración del Hero Banner */}
+                  <div>
+                    <h3 className="text-md font-medium text-gray-900 mb-4">
+                      Configuración del Banner Principal
+                    </h3>
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-3">
+                          Selecciona el estilo de banner
+                        </label>
+                        <div className="grid grid-cols-1 gap-3">
+                          {/* Banner Variant 1 */}
+                          <label className="relative flex items-center p-4 border-2 border-gray-200 rounded-lg cursor-pointer hover:border-orange-300 transition-colors">
+                            <input
+                              type="radio"
+                              name="heroVariant"
+                              value="variant1"
+                              checked={siteConfig.heroVariant === 'variant1'}
+                              onChange={(e) => updateSiteConfigLocal({ ...siteConfig, heroVariant: e.target.value })}
+                              className="sr-only"
+                            />
+                            <div className={`w-4 h-4 rounded-full border-2 mr-3 flex items-center justify-center ${
+                              siteConfig.heroVariant === 'variant1'
+                                ? 'border-orange-500 bg-orange-500'
+                                : 'border-gray-300'
+                            }`}>
+                              {siteConfig.heroVariant === 'variant1' && (
+                                <div className="w-2 h-2 bg-white rounded-full"></div>
+                              )}
+                            </div>
+                            <div className="flex-1">
+                              <div className="flex items-center space-x-3">
+                                <div className="w-12 h-8 bg-gradient-to-r from-orange-100 to-orange-200 rounded border"></div>
+                                <div>
+                                  <h4 className="text-sm font-medium text-gray-900">Banner Clásico</h4>
+                                  <p className="text-xs text-gray-500">Formulario de búsqueda central con imagen lateral</p>
+                                </div>
+                              </div>
+                            </div>
+                          </label>
+
+                          {/* Banner Variant 2 */}
+                          <label className="relative flex items-center p-4 border-2 border-gray-200 rounded-lg cursor-pointer hover:border-orange-300 transition-colors">
+                            <input
+                              type="radio"
+                              name="heroVariant"
+                              value="variant2"
+                              checked={siteConfig.heroVariant === 'variant2'}
+                              onChange={(e) => updateSiteConfigLocal({ ...siteConfig, heroVariant: e.target.value })}
+                              className="sr-only"
+                            />
+                            <div className={`w-4 h-4 rounded-full border-2 mr-3 flex items-center justify-center ${
+                              siteConfig.heroVariant === 'variant2'
+                                ? 'border-orange-500 bg-orange-500'
+                                : 'border-gray-300'
+                            }`}>
+                              {siteConfig.heroVariant === 'variant2' && (
+                                <div className="w-2 h-2 bg-white rounded-full"></div>
+                              )}
+                            </div>
+                            <div className="flex-1">
+                              <div className="flex items-center space-x-3">
+                                <div className="w-12 h-8 bg-gradient-to-r from-blue-100 to-indigo-200 rounded border"></div>
+                                <div>
+                                  <h4 className="text-sm font-medium text-gray-900">Banner Moderno</h4>
+                                  <p className="text-xs text-gray-500">Búsqueda compacta con botón Watch Video</p>
+                                </div>
+                              </div>
+                            </div>
+                          </label>
+
+                          {/* Banner Variant 3 */}
+                          <label className="relative flex items-center p-4 border-2 border-gray-200 rounded-lg cursor-pointer hover:border-orange-300 transition-colors">
+                            <input
+                              type="radio"
+                              name="heroVariant"
+                              value="variant3"
+                              checked={siteConfig.heroVariant === 'variant3'}
+                              onChange={(e) => updateSiteConfigLocal({ ...siteConfig, heroVariant: e.target.value })}
+                              className="sr-only"
+                            />
+                            <div className={`w-4 h-4 rounded-full border-2 mr-3 flex items-center justify-center ${
+                              siteConfig.heroVariant === 'variant3'
+                                ? 'border-orange-500 bg-orange-500'
+                                : 'border-gray-300'
+                            }`}>
+                              {siteConfig.heroVariant === 'variant3' && (
+                                <div className="w-2 h-2 bg-white rounded-full"></div>
+                              )}
+                            </div>
+                            <div className="flex-1">
+                              <div className="flex items-center space-x-3">
+                                <div className="w-12 h-8 bg-gradient-to-r from-gray-100 to-gray-200 rounded border"></div>
+                                <div>
+                                  <h4 className="text-sm font-medium text-gray-900">Banner Galería</h4>
+                                  <p className="text-xs text-gray-500">Galería de imágenes con agentes exclusivos</p>
+                                </div>
+                              </div>
+                            </div>
+                          </label>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Gestión de Bloques */}
+                  <div>
+                    <h3 className="text-md font-medium text-gray-900 mb-4">
+                      Bloques de la Página de Inicio
+                    </h3>
+                    <div className="space-y-3">
+                      {siteBlocks.map((block: any) => {
+                        const getBlockIcon = (type: string) => {
+                          switch (type) {
+                            case 'hero':
+                              return (
+                                <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
+                                  <svg className="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 4V2a1 1 0 011-1h8a1 1 0 011 1v2m-9 4v10a2 2 0 002 2h6a2 2 0 002-2V8M7 8h10" />
+                                  </svg>
+                                </div>
+                              )
+                            case 'featured-properties':
+                              return (
+                                <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+                                  <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z" />
+                                  </svg>
+                                </div>
+                              )
+                            case 'popular-neighborhoods':
+                              return (
+                                <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                                  <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                                  </svg>
+                                </div>
+                              )
+                            default:
+                              return (
+                                <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center">
+                                  <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" />
+                                  </svg>
+                                </div>
+                              )
+                          }
+                        }
+
+                        const config = JSON.parse(block.config || '{}')
+                        const blockName = config.name || (block.type === 'hero' ? 'Banner Principal' : 'Propiedades Destacadas')
+                        const blockDescription = config.description || (block.type === 'hero' ? 'Sección hero con búsqueda' : 'Grid de propiedades principales')
+
+                        return (
+                          <div key={block.id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
+                            <div className="flex items-center space-x-3">
+                              {getBlockIcon(block.type)}
+                              <div>
+                                <h4 className="text-sm font-medium text-gray-900">{blockName}</h4>
+                                <p className="text-xs text-gray-500">{blockDescription}</p>
+                              </div>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              {block.type === 'hero' ? (
+                                <div className="flex items-center space-x-2">
+                                  <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">Obligatorio</span>
+                                  <div className="w-9 h-5 bg-orange-500 rounded-full relative">
+                                    <div className="absolute top-[2px] right-[2px] bg-white rounded-full h-4 w-4"></div>
+                                  </div>
+                                </div>
+                              ) : (
+                                <>
+                                  <button className="text-xs text-orange-600 hover:text-orange-700 font-medium">
+                                    Editar
+                                  </button>
+                                  <label className="relative inline-flex items-center cursor-pointer">
+                                    <input
+                                      type="checkbox"
+                                      checked={block.visible}
+                                      onChange={(e) => toggleBlock(block.id, e.target.checked)}
+                                      className="sr-only peer"
+                                    />
+                                    <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-orange-500"></div>
+                                  </label>
+                                </>
+                              )}
+                            </div>
+                          </div>
+                        )
+                      })}
+
+                      {/* Add Block Button */}
+                      <button className="w-full p-4 border-2 border-dashed border-gray-300 rounded-lg text-center hover:border-orange-300 hover:bg-orange-50 transition-colors group">
+                        <div className="flex items-center justify-center space-x-2">
+                          <svg className="w-5 h-5 text-gray-400 group-hover:text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                          </svg>
+                          <span className="text-sm text-gray-600 group-hover:text-orange-600 font-medium">
+                            Agregar Nuevo Bloque
+                          </span>
+                        </div>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Save Button */}
+                  <div className="pt-6 border-t">
+                    <button
+                      onClick={updatePageConfig}
+                      disabled={isSavingPage}
+                      className={`w-full font-medium py-3 px-4 rounded-lg transition-colors ${
+                        isSavingPage
+                          ? 'bg-gray-400 cursor-not-allowed'
+                          : 'bg-orange-500 hover:bg-orange-600'
+                      } text-white`}
+                    >
+                      {isSavingPage ? (
+                        <div className="flex items-center justify-center space-x-2">
+                          <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                            <path className="opacity-75" fill="currentColor" d="m4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                          </svg>
+                          <span>Guardando...</span>
+                        </div>
+                      ) : (
+                        'Guardar Configuración de la Página'
+                      )}
+                    </button>
+
+                    {/* Page Save Message */}
+                    {pageSaveMessage && (
+                      <div className={`mt-3 p-3 rounded-lg text-sm text-center ${
+                        pageSaveMessage.includes('Error')
+                          ? 'bg-red-100 text-red-700 border border-red-200'
+                          : 'bg-green-100 text-green-700 border border-green-200'
+                      }`}>
+                        <div className="flex items-center justify-center space-x-2">
+                          {pageSaveMessage.includes('Error') ? (
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                          ) : (
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                            </svg>
+                          )}
+                          <span>{pageSaveMessage}</span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {activeTab === 'contact-config' && (
+                <div className="space-y-6">
+                  {/* Configuración de la Página de Contacto */}
+                  <div>
+                    <h3 className="text-md font-medium text-gray-900 mb-4">
+                      Configuración de la Página de Contacto
+                    </h3>
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Título Principal
+                        </label>
+                        <input
+                          type="text"
+                          placeholder="Contacto"
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Descripción
+                        </label>
+                        <textarea
+                          rows={3}
+                          placeholder="¿Tienes alguna pregunta? Estamos aquí para ayudarte..."
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Bloques de la Página de Contacto */}
+                  <div>
+                    <h3 className="text-md font-medium text-gray-900 mb-4">
+                      Bloques de la Página
+                    </h3>
+
+                    <div className="space-y-3">
+                      {/* Información de Contacto - Siempre visible */}
+                      <div className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
+                        <div className="flex items-center space-x-3">
+                          <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                            <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                          </div>
                           <div>
-                            <h4 className="text-sm font-medium text-gray-900">{blockName}</h4>
-                            <p className="text-xs text-gray-500">{blockDescription}</p>
+                            <h4 className="text-sm font-medium text-gray-900">Información de Contacto</h4>
+                            <p className="text-xs text-gray-500">Teléfono, email, dirección, horarios</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">Obligatorio</span>
+                          <div className="w-9 h-5 bg-orange-500 rounded-full relative">
+                            <div className="absolute top-[2px] right-[2px] bg-white rounded-full h-4 w-4"></div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Formulario de Contacto - Siempre visible */}
+                      <div className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
+                        <div className="flex items-center space-x-3">
+                          <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+                            <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2H9l-4 4z" />
+                            </svg>
+                          </div>
+                          <div>
+                            <h4 className="text-sm font-medium text-gray-900">Formulario de Contacto</h4>
+                            <p className="text-xs text-gray-500">Formulario para recibir mensajes</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">Obligatorio</span>
+                          <div className="w-9 h-5 bg-orange-500 rounded-full relative">
+                            <div className="absolute top-[2px] right-[2px] bg-white rounded-full h-4 w-4"></div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Mapa - Opcional */}
+                      <div className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
+                        <div className="flex items-center space-x-3">
+                          <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
+                            <svg className="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                            </svg>
+                          </div>
+                          <div>
+                            <h4 className="text-sm font-medium text-gray-900">Mapa de Ubicación</h4>
+                            <p className="text-xs text-gray-500">Mapa con la ubicación de la empresa</p>
                           </div>
                         </div>
                         <div className="flex items-center space-x-2">
@@ -271,48 +1096,93 @@ export default function AdminDashboard() {
                           <label className="relative inline-flex items-center cursor-pointer">
                             <input
                               type="checkbox"
-                              checked={block.visible}
-                              onChange={(e) => toggleBlock(block.id, e.target.checked)}
                               className="sr-only peer"
                             />
                             <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-orange-500"></div>
                           </label>
                         </div>
                       </div>
-                    )
-                  })}
 
-                  {/* Add Block Button */}
-                  <button className="w-full p-4 border-2 border-dashed border-gray-300 rounded-lg text-center hover:border-orange-300 hover:bg-orange-50 transition-colors group">
-                    <div className="flex items-center justify-center space-x-2">
-                      <svg className="w-5 h-5 text-gray-400 group-hover:text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                      </svg>
-                      <span className="text-sm text-gray-600 group-hover:text-orange-600 font-medium">
-                        Agregar Nuevo Bloque
-                      </span>
+                      {/* FAQ - Opcional */}
+                      <div className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
+                        <div className="flex items-center space-x-3">
+                          <div className="w-10 h-10 bg-yellow-100 rounded-lg flex items-center justify-center">
+                            <svg className="w-5 h-5 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                          </div>
+                          <div>
+                            <h4 className="text-sm font-medium text-gray-900">Preguntas Frecuentes</h4>
+                            <p className="text-xs text-gray-500">FAQ sobre servicios inmobiliarios</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <button className="text-xs text-orange-600 hover:text-orange-700 font-medium">
+                            Editar
+                          </button>
+                          <label className="relative inline-flex items-center cursor-pointer">
+                            <input
+                              type="checkbox"
+                              className="sr-only peer"
+                            />
+                            <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-orange-500"></div>
+                          </label>
+                        </div>
+                      </div>
                     </div>
-                  </button>
-                </div>
-              </div>
+                  </div>
 
-              {/* Save Button */}
-              <div className="mt-8 pt-6 border-t">
-                <button className="w-full bg-orange-500 hover:bg-orange-600 text-white font-medium py-3 px-4 rounded-lg transition-colors">
-                  Guardar Cambios
-                </button>
-              </div>
+                  {/* Save Button */}
+                  <div className="pt-6 border-t">
+                    <button
+                      className="w-full font-medium py-3 px-4 rounded-lg transition-colors bg-orange-500 hover:bg-orange-600 text-white"
+                    >
+                      Guardar Configuración de Contacto
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
         </div>
 
         {/* Preview del Sitio Web - Derecha (80%) */}
-        <div className="flex-1 bg-gray-100">
-          <div className="w-full h-full p-4">
-            <div className="w-full h-full bg-white rounded-lg shadow-lg overflow-hidden">
+        <div className="flex-1 bg-gray-100 relative">
+          <div className="absolute inset-0 p-4">
+            <div className="w-full h-full bg-white rounded-xl shadow-xl overflow-hidden border border-gray-200">
+              {/* Barra superior del preview */}
+              <div className="bg-gray-50 border-b border-gray-200 px-4 py-2 flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <div className="flex space-x-1">
+                    <div className="w-3 h-3 bg-red-400 rounded-full"></div>
+                    <div className="w-3 h-3 bg-yellow-400 rounded-full"></div>
+                    <div className="w-3 h-3 bg-green-400 rounded-full"></div>
+                  </div>
+                  <span className="text-sm text-gray-500 ml-4">Vista Previa en Tiempo Real</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <button
+                    onClick={refreshPreview}
+                    className="p-1 hover:bg-gray-200 rounded text-gray-400 hover:text-gray-600"
+                    title="Refrescar preview"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                  </button>
+                  <button
+                    onClick={handleLogout}
+                    className="px-2 py-1 text-xs bg-red-500 hover:bg-red-600 text-white rounded transition-colors"
+                    title="Cerrar sesión"
+                  >
+                    Salir
+                  </button>
+                </div>
+              </div>
+
               <iframe
                 ref={iframeRef}
                 src="/preview"
-                className="w-full h-full border-0"
+                className="w-full h-[calc(100%-40px)] border-0"
                 title="Vista Previa del Sitio Web"
               />
             </div>

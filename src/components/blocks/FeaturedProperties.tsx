@@ -1,7 +1,9 @@
 'use client'
 
+import { useState, useEffect } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
+import { Property, OPERATION_TYPES } from '@/lib/properties-api'
 
 interface FeaturedPropertiesProps {
   config?: {
@@ -10,102 +12,153 @@ interface FeaturedPropertiesProps {
   }
 }
 
-// Mock data - esto luego vendrá de la base de datos
-const featuredProperties = [
-  {
-    id: '1',
-    title: 'Casa Moderna en Palermo',
-    price: 450000,
-    location: 'Palermo, Buenos Aires',
-    bedrooms: 3,
-    bathrooms: 2,
-    area: 120,
-    image: 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?ixlib=rb-4.0.3&auto=format&fit=crop&w=2075&q=80',
-    type: 'sale',
-    featured: true
-  },
-  {
-    id: '2',
-    title: 'Departamento Luminoso',
-    price: 180000,
-    location: 'Belgrano, Buenos Aires',
-    bedrooms: 2,
-    bathrooms: 1,
-    area: 75,
-    image: 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80',
-    type: 'sale',
-    featured: true
-  },
-  {
-    id: '3',
-    title: 'Casa Familiar con Jardín',
-    price: 2800,
-    location: 'Villa Crespo, Buenos Aires',
-    bedrooms: 4,
-    bathrooms: 3,
-    area: 180,
-    image: 'https://images.unsplash.com/photo-1570129477492-45c003edd2be?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80',
-    type: 'rent',
-    featured: true
-  },
-  {
-    id: '4',
-    title: 'Penthouse con Vista',
-    price: 850000,
-    location: 'Puerto Madero, Buenos Aires',
-    bedrooms: 3,
-    bathrooms: 3,
-    area: 150,
-    image: 'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80',
-    type: 'sale',
-    featured: true
-  }
-]
-
-const formatPrice = (price: number, type: string) => {
-  const formattedPrice = new Intl.NumberFormat('es-AR', {
-    style: 'currency',
-    currency: 'USD',
-    minimumFractionDigits: 0,
-  }).format(price)
-
-  return type === 'rent' ? `${formattedPrice}/mes` : formattedPrice
+const formatPrice = (price: string, currency: string) => {
+  const formatter = new Intl.NumberFormat('es-AR')
+  return `${currency} ${formatter.format(parseFloat(price))}`
 }
 
 export default function FeaturedProperties({ config }: FeaturedPropertiesProps = {}) {
+  const [properties, setProperties] = useState<Property[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  // Fetch latest properties from API
+  useEffect(() => {
+    const fetchLatestProperties = async () => {
+      setLoading(true)
+      setError(null)
+
+      try {
+        const response = await fetch('https://api.2clics.com.ar/api/external/properties', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'api_key': 'kyw-ucv3ebh@dnp*JQVfed4ktw*yan!rqm'
+          },
+          body: JSON.stringify({
+            offset: 0,
+            limit: 8,
+            filters: {}
+          })
+        })
+
+        if (!response.ok) {
+          throw new Error('Error al cargar las propiedades')
+        }
+
+        const data = await response.json()
+
+        if (data.status === 'fail' || data.errors) {
+          throw new Error('Error de la API al cargar propiedades')
+        }
+
+        // Take the first 8 properties (latest ones)
+        const latestProperties = (data.properties || []).slice(0, 8)
+        setProperties(latestProperties)
+      } catch (err) {
+        console.error('Error loading latest properties:', err)
+        setError('Error al cargar las propiedades')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchLatestProperties()
+  }, [])
+
+  // Helper function to get property title
+  const getPropertyTitle = (property: Property) => {
+    const titleMeta = property.meta_data?.find(m => m.metaKey === 'title')
+    return titleMeta?.metaValue || `${property.propertyType?.name || 'Propiedad'} en ${property.neighborhood?.name || property.city?.name}`
+  }
+
+  // Helper function to get property description
+  const getPropertyDescription = (property: Property) => {
+    const descMeta = property.meta_data?.find(m => m.metaKey === 'description_plain_text')
+    return descMeta?.metaValue || ''
+  }
+
+  // Helper function to limit title to 7 words
+  const getLimitedTitle = (property: Property) => {
+    const fullTitle = getPropertyTitle(property)
+    const words = fullTitle.split(' ')
+    if (words.length <= 7) {
+      return fullTitle
+    }
+    return words.slice(0, 7).join(' ') + '...'
+  }
+
   return (
-    <section className="py-16 bg-gray-50">
+    <section className="py-52 bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="text-center mb-12">
           <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-            Propiedades Destacadas
+            Últimas Propiedades
           </h2>
           <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-            Descubre nuestra selección de las mejores propiedades disponibles en las ubicaciones más deseadas.
+            Descubre las propiedades más recientes que hemos añadido a nuestro catálogo.
           </p>
         </div>
 
+        {/* Loading State */}
+        {loading && (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+            {Array.from({ length: 8 }).map((_, index) => (
+              <div key={index} className="bg-white rounded-xl shadow-md overflow-hidden animate-pulse">
+                <div className="h-48 bg-gray-300"></div>
+                <div className="p-6">
+                  <div className="h-4 bg-gray-300 rounded w-3/4 mb-2"></div>
+                  <div className="h-3 bg-gray-300 rounded w-1/2 mb-4"></div>
+                  <div className="flex justify-between items-center">
+                    <div className="h-4 bg-gray-300 rounded w-1/3"></div>
+                    <div className="h-4 bg-gray-300 rounded w-1/4"></div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Error State */}
+        {error && (
+          <div className="text-center py-12">
+            <div className="text-red-500 text-lg mb-4">
+              {error}
+            </div>
+            <button
+              onClick={() => window.location.reload()}
+              className="text-orange-600 hover:text-orange-700 font-medium"
+            >
+              Intentar nuevamente
+            </button>
+          </div>
+        )}
+
         {/* Properties Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
-          {featuredProperties.map((property) => (
+        {!loading && !error && (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+            {properties.map((property) => (
             <div
-              key={property.id}
+              key={property.propertyId}
               className="bg-white rounded-xl shadow-md hover:shadow-xl transition-shadow duration-300 overflow-hidden group"
             >
               {/* Property Image */}
               <div className="relative h-48 overflow-hidden">
                 <Image
-                  src={property.image}
-                  alt={property.title}
+                  src={property.images?.[0]?.url || '/placeholder-property.svg'}
+                  alt={getPropertyTitle(property)}
                   fill
                   className="object-cover group-hover:scale-105 transition-transform duration-300"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).src = '/placeholder-property.svg'
+                  }}
                 />
                 <div className="absolute top-3 left-3">
                   <span className={`px-3 py-1 rounded-full text-xs font-medium text-white ${
-                    property.type === 'sale' ? 'bg-green-500' : 'bg-blue-500'
+                    property.operationType === 'VENTA' ? 'bg-green-500' : 'bg-blue-500'
                   }`}>
-                    {property.type === 'sale' ? 'Venta' : 'Alquiler'}
+                    {OPERATION_TYPES[property.operationType as keyof typeof OPERATION_TYPES] || property.operationType}
                   </span>
                 </div>
                 <div className="absolute top-3 right-3">
@@ -130,8 +183,8 @@ export default function FeaturedProperties({ config }: FeaturedPropertiesProps =
               {/* Property Details */}
               <div className="p-6">
                 <div className="mb-2">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-1">
-                    {property.title}
+                  <h3 className="text-lg font-semibold text-gray-900 mb-1 leading-tight h-12 overflow-hidden">
+                    {getLimitedTitle(property)}
                   </h3>
                   <p className="text-sm text-gray-600 flex items-center">
                     <svg
@@ -153,48 +206,48 @@ export default function FeaturedProperties({ config }: FeaturedPropertiesProps =
                         d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
                       />
                     </svg>
-                    {property.location}
+                    {property.neighborhood?.name && `${property.neighborhood.name}, `}
+                    {property.city?.name}
                   </p>
                 </div>
 
                 {/* Property Stats */}
                 <div className="flex items-center justify-between text-sm text-gray-600 mb-4">
-                  <div className="flex items-center">
-                    <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                      <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" />
-                    </svg>
-                    {property.bedrooms} hab
-                  </div>
-                  <div className="flex items-center">
-                    <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M10 2a8 8 0 100 16 8 8 0 000-16zM7 9a1 1 0 000 2h6a1 1 0 100-2H7z" clipRule="evenodd" />
-                    </svg>
-                    {property.bathrooms} baños
-                  </div>
-                  <div className="flex items-center">
-                    <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clipRule="evenodd" />
-                    </svg>
-                    {property.area}m²
-                  </div>
+                  {property.amountBedroom > 0 && (
+                    <div className="flex items-center">
+                      <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" />
+                      </svg>
+                      {property.amountBedroom} hab
+                    </div>
+                  )}
+                  {property.amountRoom > 0 && (
+                    <div className="flex items-center">
+                      <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M10 2a8 8 0 100 16 8 8 0 000-16zM7 9a1 1 0 000 2h6a1 1 0 100-2H7z" clipRule="evenodd" />
+                      </svg>
+                      {property.amountRoom} amb
+                    </div>
+                  )}
+                  {property.coveredArea && parseFloat(property.coveredArea) > 0 && (
+                    <div className="flex items-center">
+                      <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clipRule="evenodd" />
+                      </svg>
+                      {Math.round(parseFloat(property.coveredArea))}m²
+                    </div>
+                  )}
                 </div>
 
-                {/* Price and CTA */}
-                <div className="flex items-center justify-between">
-                  <div className="text-xl font-bold text-primary-600">
-                    {formatPrice(property.price, property.type)}
-                  </div>
-                  <Link
-                    href={`/propiedades/${property.id}`}
-                    className="text-primary-600 hover:text-primary-700 font-medium text-sm transition-colors"
-                  >
-                    Ver detalles →
-                  </Link>
+                {/* Price */}
+                <div className="text-xl font-bold" style={{ color: config?.primaryColor || '#ea5a0c' }}>
+                  {formatPrice(property.price, property.currency)}
                 </div>
               </div>
             </div>
           ))}
-        </div>
+          </div>
+        )}
 
         {/* View All Button */}
         <div className="text-center">

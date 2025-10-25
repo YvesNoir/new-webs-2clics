@@ -1,0 +1,9 @@
+<svg width="400" height="240" viewBox="0 0 400 240" fill="none" xmlns="http://www.w3.org/2000/svg">
+<rect width="400" height="240" fill="#F3F4F6"/>
+<path d="M150 80L200 40L250 80V180H150V80Z" fill="#E5E7EB"/>
+<path d="M160 120H190V150H160V120Z" fill="#9CA3AF"/>
+<path d="M210 120H240V150H210V120Z" fill="#9CA3AF"/>
+<path d="M180 160H220V180H180V160Z" fill="#6B7280"/>
+<circle cx="230" cy="100" r="8" fill="#FCD34D"/>
+<text x="200" y="210" font-family="Arial, sans-serif" font-size="14" fill="#6B7280" text-anchor="middle">Imagen no disponible</text>
+</svg>

@@ -6,7 +6,12 @@ import Link from 'next/link'
 interface HeaderProps {
   config?: {
     companyName: string
+    siteTitle?: string
+    logo?: string
     primaryColor: string
+    phone?: string
+    whatsapp?: string
+    email?: string
   }
 }
 
@@ -21,11 +26,26 @@ export default function Header({ config }: HeaderProps = {}) {
         <div className="flex justify-between items-center h-20">
           {/* Logo */}
           <div className="flex-shrink-0">
-            <Link href="/" className="flex items-center space-x-2">
-              <div className="w-10 h-10 bg-orange-500 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-xl">H</span>
-              </div>
-              <span className="text-2xl font-bold text-gray-900">{companyName}</span>
+            <Link href="/">
+              {config?.logo ? (
+                <img
+                  src={config.logo}
+                  alt={companyName}
+                  className="h-10 max-w-[180px] object-contain"
+                />
+              ) : (
+                <div className="flex items-center space-x-2">
+                  <div
+                    className="w-10 h-10 rounded-lg flex items-center justify-center"
+                    style={{ backgroundColor: primaryColor }}
+                  >
+                    <span className="text-white font-bold text-xl">
+                      {companyName.charAt(0).toUpperCase()}
+                    </span>
+                  </div>
+                  <span className="text-2xl font-bold text-gray-900">{companyName}</span>
+                </div>
+              )}
             </Link>
           </div>
 
@@ -40,14 +60,9 @@ export default function Header({ config }: HeaderProps = {}) {
               </button>
             </div>
 
-            <div className="relative group">
-              <button className="flex items-center text-gray-700 hover:text-orange-500 font-medium">
-                Propiedades
-                <svg className="ml-1 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-                </svg>
-              </button>
-            </div>
+            <Link href="/propiedades" className="text-gray-700 hover:text-orange-500 font-medium">
+              Propiedades
+            </Link>
 
             <div className="relative group">
               <button className="flex items-center text-gray-700 hover:text-orange-500 font-medium">
@@ -75,6 +90,10 @@ export default function Header({ config }: HeaderProps = {}) {
                 </svg>
               </button>
             </div>
+
+            <Link href="/contacto" className="text-gray-700 hover:text-orange-500 font-medium">
+              Contacto
+            </Link>
           </nav>
 
           {/* Mobile menu button */}
@@ -127,6 +146,9 @@ export default function Header({ config }: HeaderProps = {}) {
               </Link>
               <Link href="/nosotros" className="text-gray-700 hover:text-orange-500 block px-3 py-2 rounded-md text-base font-medium">
                 Nosotros
+              </Link>
+              <Link href="/contacto" className="text-gray-700 hover:text-orange-500 block px-3 py-2 rounded-md text-base font-medium">
+                Contacto
               </Link>
             </div>
           </div>

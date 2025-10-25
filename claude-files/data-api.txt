@@ -1,0 +1,53 @@
+[26/8/25, 11:37:20 a. m.] Hernan Gavidia: Bien, estos son los dos endpoints que habilitamos
+[26/8/25, 11:37:21 a. m.] Hernan Gavidia: POST para Listar propiedades (máximo 20 propiedades):
+https://api.2clics.com.ar/api/external/properties
+[26/8/25, 11:37:21 a. m.] Hernan Gavidia: GET para traer la info de una propiedad:
+https://api.2clics.com.ar/api/external/property/135244
+[26/8/25, 11:37:21 a. m.] Hernan Gavidia: Tenes que agregarle el header:
+“api_key”: “kyw-ucv3ebh@dnp*JQVfed4ktw*yan!rqm”
+[26/8/25, 11:37:22 a. m.] Hernan Gavidia: y ahí te paso el detalle del body del POST para que puedas traer propiedades
+[26/8/25, 11:37:22 a. m.] Hernan Gavidia: El body tiene que ser tipo raw, JSON:
+{
+    "offset": 0,
+    "limit": 20
+}
+[26/8/25, 11:37:22 a. m.] Hernan Gavidia: y si querés se pueden sumar algunos filtros:
+[26/8/25, 11:37:22 a. m.] Hernan Gavidia: {
+    "offset": 0,
+    "limit": 20,
+    "filters": {
+        "amount_bedroom": ["1"],
+        "operation_type": ["VENTA"],
+        "property_type": ["5785"],
+        "min_price": "100000",
+        "max_price": "200000",
+        "currency": "U$D",
+        "amount_room": ["2"]
+    }
+}
+[26/8/25, 11:37:22 a. m.] Hernan Gavidia: amount_bedroom puede ser un array con los siguientes valores:
+1, 2, 3, 4, 5 (si le pasas 5 va a traer propiedades con 5 o más dormitorios)
+[26/8/25, 11:37:22 a. m.] Hernan Gavidia: lo mismo para amount_room (ambientes)
+[26/8/25, 11:37:23 a. m.] Hernan Gavidia: min_price, max_price tienen que ser números
+[26/8/25, 11:37:23 a. m.] Hernan Gavidia: currency puede ser: U$D o AR$
+[26/8/25, 11:37:23 a. m.] Hernan Gavidia: operation_type: VENTA, ALQUILER_PERMANENTE, ALQUILER_TEMPORARIO
+[26/8/25, 11:37:23 a. m.] Hernan Gavidia: Y acá tenés los valores de property_type admitidos:
+"Casa quinta"	5781
+"Departamento"	5785
+"Casa"	5791
+"Terreno / Lote"	5794
+"Galpón"	5786
+"Local comercial"	5780
+"Oficina"	5790
+"Cochera"	5784
+"Chalet"	5793
+"Depósito"	5787
+"Dúplex"	5795
+"Campo"	5796
+"Fondo de comercio"	5797
+"Hotel"	5798
+"Finca"	5799
+"Edificio"	5803
+"Cabaña"	5805
+"Chacra"	5806
+"PH"	5792
