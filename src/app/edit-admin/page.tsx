@@ -24,6 +24,8 @@ export default function AdminDashboard() {
     // Información de contacto
     address: '',
     schedule: '',
+    mapUrl: '',
+    showMap: true,
     phone: '',
     whatsapp: '',
     email: '',
@@ -35,6 +37,9 @@ export default function AdminDashboard() {
 
     // Hero Banner
     heroVariant: 'variant1',
+    videoUrl: '',
+    heroTitle: '',
+    heroSubtitle: '',
 
     // Redes sociales
     facebook: '',
@@ -85,6 +90,8 @@ export default function AdminDashboard() {
           favicon: config.favicon || '',
           address: config.address || '',
           schedule: config.schedule || '',
+          mapUrl: config.mapUrl || '',
+          showMap: config.showMap !== undefined ? config.showMap : true,
           phone: config.phone || '',
           whatsapp: config.whatsapp || '',
           email: config.email || '',
@@ -92,6 +99,9 @@ export default function AdminDashboard() {
           secondaryColor: config.secondaryColor || '#1f2937',
           tagColor: config.tagColor || '#10b981',
           heroVariant: config.heroVariant || 'variant1',
+          videoUrl: config.videoUrl || '',
+          heroTitle: config.heroTitle || '',
+          heroSubtitle: config.heroSubtitle || '',
           facebook: config.facebook || '',
           instagram: config.instagram || '',
           twitter: config.twitter || '',
@@ -508,6 +518,21 @@ export default function AdminDashboard() {
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Mapa de Ubicación (URL de Google Maps)
+                        </label>
+                        <input
+                          type="url"
+                          value={siteConfig.mapUrl || ''}
+                          onChange={(e) => updateSiteConfigLocal({ ...siteConfig, mapUrl: e.target.value })}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-orange-500 focus:border-orange-500"
+                          placeholder="https://www.google.com/maps/place/..."
+                        />
+                        <p className="text-xs text-gray-500 mt-1">
+                          Pega la URL completa de Google Maps. Pasos: 1) Ve a Google Maps, 2) Busca tu ubicación, 3) Copia la URL completa del navegador, 4) Pégala aquí.
+                        </p>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
                           Teléfono
                         </label>
                         <input
@@ -839,7 +864,92 @@ export default function AdminDashboard() {
                               </div>
                             </div>
                           </label>
+
+                          {/* Banner Variant 4 - Video Background */}
+                          <label className="relative flex items-center p-4 border-2 border-gray-200 rounded-lg cursor-pointer hover:border-orange-300 transition-colors">
+                            <input
+                              type="radio"
+                              name="heroVariant"
+                              value="variant4"
+                              checked={siteConfig.heroVariant === 'variant4'}
+                              onChange={(e) => updateSiteConfigLocal({ ...siteConfig, heroVariant: e.target.value })}
+                              className="sr-only"
+                            />
+                            <div className={`w-4 h-4 rounded-full border-2 mr-3 flex items-center justify-center ${
+                              siteConfig.heroVariant === 'variant4'
+                                ? 'border-orange-500 bg-orange-500'
+                                : 'border-gray-300'
+                            }`}>
+                              {siteConfig.heroVariant === 'variant4' && (
+                                <div className="w-2 h-2 bg-white rounded-full"></div>
+                              )}
+                            </div>
+                            <div className="flex-1">
+                              <div className="flex items-center space-x-3">
+                                <div className="w-12 h-8 bg-gradient-to-r from-red-100 to-red-200 rounded border flex items-center justify-center">
+                                  <svg className="w-3 h-3 text-red-500" fill="currentColor" viewBox="0 0 20 20">
+                                    <path d="M2 6a2 2 0 012-2h6l2 2h6a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6zM14.553 7.106A1 1 0 0014 8v4a1 1 0 00.553.894l2 1A1 1 0 0018 13V7a1 1 0 00-1.447-.894l-2 1z"/>
+                                  </svg>
+                                </div>
+                                <div>
+                                  <h4 className="text-sm font-medium text-gray-900">Banner con Video</h4>
+                                  <p className="text-xs text-gray-500">Video de YouTube de fondo con búsqueda avanzada</p>
+                                </div>
+                              </div>
+                            </div>
+                          </label>
                         </div>
+
+                        {/* Configuración específica para Variant 4 */}
+                        {siteConfig.heroVariant === 'variant4' && (
+                          <div className="mt-6 p-4 bg-gray-50 rounded-lg space-y-4">
+                            <h4 className="text-sm font-medium text-gray-900">Configuración del Video Banner</h4>
+
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700 mb-2">
+                                URL del Video de YouTube
+                              </label>
+                              <input
+                                type="url"
+                                placeholder="https://www.youtube.com/watch?v=..."
+                                value={siteConfig.videoUrl || ''}
+                                onChange={(e) => updateSiteConfigLocal({ ...siteConfig, videoUrl: e.target.value })}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                              />
+                              <p className="text-xs text-gray-500 mt-1">
+                                El video se reproducirá automáticamente sin sonido como fondo del banner
+                              </p>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                  Título del Banner
+                                </label>
+                                <input
+                                  type="text"
+                                  placeholder="Easy Way to Find a Perfect Property"
+                                  value={siteConfig.heroTitle || ''}
+                                  onChange={(e) => updateSiteConfigLocal({ ...siteConfig, heroTitle: e.target.value })}
+                                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                                />
+                              </div>
+
+                              <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                  Subtítulo del Banner
+                                </label>
+                                <input
+                                  type="text"
+                                  placeholder="From as low as $10 per day with limited time offer discounts"
+                                  value={siteConfig.heroSubtitle || ''}
+                                  onChange={(e) => updateSiteConfigLocal({ ...siteConfig, heroSubtitle: e.target.value })}
+                                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -905,7 +1015,9 @@ export default function AdminDashboard() {
                             <div className="flex items-center space-x-2">
                               {block.type === 'hero' ? (
                                 <div className="flex items-center space-x-2">
-                                  <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">Obligatorio</span>
+                                  <svg className="w-3 h-3 text-gray-500" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
+                          </svg>
                                   <div className="w-9 h-5 bg-orange-500 rounded-full relative">
                                     <div className="absolute top-[2px] right-[2px] bg-white rounded-full h-4 w-4"></div>
                                   </div>
@@ -1047,7 +1159,9 @@ export default function AdminDashboard() {
                           </div>
                         </div>
                         <div className="flex items-center space-x-2">
-                          <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">Obligatorio</span>
+                          <svg className="w-3 h-3 text-gray-500" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
+                          </svg>
                           <div className="w-9 h-5 bg-orange-500 rounded-full relative">
                             <div className="absolute top-[2px] right-[2px] bg-white rounded-full h-4 w-4"></div>
                           </div>
@@ -1068,14 +1182,16 @@ export default function AdminDashboard() {
                           </div>
                         </div>
                         <div className="flex items-center space-x-2">
-                          <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">Obligatorio</span>
+                          <svg className="w-3 h-3 text-gray-500" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
+                          </svg>
                           <div className="w-9 h-5 bg-orange-500 rounded-full relative">
                             <div className="absolute top-[2px] right-[2px] bg-white rounded-full h-4 w-4"></div>
                           </div>
                         </div>
                       </div>
 
-                      {/* Mapa - Opcional */}
+                      {/* Mapa - Con Switch */}
                       <div className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
                         <div className="flex items-center space-x-3">
                           <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
@@ -1086,20 +1202,30 @@ export default function AdminDashboard() {
                           </div>
                           <div>
                             <h4 className="text-sm font-medium text-gray-900">Mapa de Ubicación</h4>
-                            <p className="text-xs text-gray-500">Mapa con la ubicación de la empresa</p>
+                            <p className="text-xs text-gray-500">
+                              {siteConfig.mapUrl && siteConfig.mapUrl.trim() ?
+                                'Mostrar mapa en la página de contacto' :
+                                'Configurar URL de Google Maps primero'
+                              }
+                            </p>
                           </div>
                         </div>
                         <div className="flex items-center space-x-2">
-                          <button className="text-xs text-orange-600 hover:text-orange-700 font-medium">
-                            Editar
-                          </button>
-                          <label className="relative inline-flex items-center cursor-pointer">
-                            <input
-                              type="checkbox"
-                              className="sr-only peer"
-                            />
-                            <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-orange-500"></div>
-                          </label>
+                          {siteConfig.mapUrl && siteConfig.mapUrl.trim() ? (
+                            <label className="relative inline-flex items-center cursor-pointer">
+                              <input
+                                type="checkbox"
+                                checked={siteConfig.showMap}
+                                onChange={(e) => updateSiteConfigLocal({ ...siteConfig, showMap: e.target.checked })}
+                                className="sr-only peer"
+                              />
+                              <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-orange-500"></div>
+                            </label>
+                          ) : (
+                            <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded font-medium">
+                              Sin URL
+                            </span>
+                          )}
                         </div>
                       </div>
 

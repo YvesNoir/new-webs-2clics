@@ -1,18 +1,95 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
+import { useSearchParams, useRouter, usePathname } from 'next/navigation'
 import { fetchProperties, PropertyFilters, PropertyResponse } from '@/lib/properties-api'
 import PropertyCard from '@/components/PropertyCard'
 import PropertyFilters from '@/components/PropertyFilters'
 
-export default function PropertiesClientComponent() {
+interface PropertiesClientComponentProps {
+  pageTitle?: string
+  initialFilters?: PropertyFilters
+}
+
+export default function PropertiesClientComponent({ pageTitle, initialFilters }: PropertiesClientComponentProps = {}) {
+  const searchParams = useSearchParams()
+  const router = useRouter()
+  const pathname = usePathname()
   const [properties, setProperties] = useState<PropertyResponse | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [filters, setFilters] = useState<PropertyFilters>({})
   const [currentPage, setCurrentPage] = useState(1)
+  const [config, setConfig] = useState<any>(null)
 
   const propertiesPerPage = 12
+
+  // Function to update URL with current filters
+  const updateURLWithFilters = useCallback((newFilters: PropertyFilters) => {
+    const params = new URLSearchParams()
+
+    if (newFilters.property_type?.[0]) params.set('tipo', newFilters.property_type[0])
+    if (newFilters.operation_type?.[0]) params.set('operacion', newFilters.operation_type[0])
+    if (newFilters.location) params.set('ubicacion', newFilters.location)
+    if (newFilters.min_price) params.set('precio-min', newFilters.min_price)
+    if (newFilters.max_price) params.set('precio-max', newFilters.max_price)
+
+    // Map API currency values to URL-friendly values
+    if (newFilters.currency) {
+      const currencyMap: { [key: string]: string } = {
+        'U$D': 'USD',
+        'AR$': 'ARS'
+      }
+      params.set('moneda', currencyMap[newFilters.currency] || newFilters.currency)
+    }
+
+    const queryString = params.toString()
+    const newURL = queryString ? `/propiedades?${queryString}` : '/propiedades'
+
+    // Update URL without redirect
+    router.replace(newURL)
+  }, [router])
+
+  // Initialize filters from URL query params and initialFilters
+  useEffect(() => {
+    const combinedFilters: PropertyFilters = { ...initialFilters }
+
+    // Read URL parameters and convert them to filters (URL params take priority)
+    const tipo = searchParams.get('tipo')
+    const operacion = searchParams.get('operacion')
+    const ubicacion = searchParams.get('ubicacion')
+    const precioMin = searchParams.get('precio-min')
+    const precioMax = searchParams.get('precio-max')
+    const moneda = searchParams.get('moneda')
+
+    if (tipo) combinedFilters.property_type = [tipo]
+    if (operacion) combinedFilters.operation_type = [operacion]
+    if (ubicacion) combinedFilters.location = ubicacion
+    if (precioMin) combinedFilters.min_price = precioMin
+    if (precioMax) combinedFilters.max_price = precioMax
+
+    // Map URL currency values to API values
+    if (moneda) {
+      const currencyMap: { [key: string]: string } = {
+        'USD': 'U$D',
+        'ARS': 'AR$'
+      }
+      combinedFilters.currency = currencyMap[moneda] || moneda
+    }
+
+    setFilters(combinedFilters)
+
+    // Debug: log filters being set
+    console.log('🎯 Setting filters from URL params and initialFilters:', combinedFilters)
+  }, [searchParams, initialFilters])
+
+  // Load site configuration
+  useEffect(() => {
+    fetch('/api/site-config')
+      .then(res => res.json())
+      .then(data => setConfig(data))
+      .catch(err => console.error('Error loading site config:', err))
+  }, [])
 
   // Load properties
   useEffect(() => {
@@ -22,10 +99,18 @@ export default function PropertiesClientComponent() {
 
       try {
         const offset = (currentPage - 1) * propertiesPerPage
+        const finalFilters = Object.keys(filters).length > 0 ? filters : undefined
+
+        console.log('🔍 About to call fetchProperties with:', {
+          offset,
+          limit: propertiesPerPage,
+          filters: finalFilters
+        })
+
         const response = await fetchProperties({
           offset,
           limit: propertiesPerPage,
-          filters: Object.keys(filters).length > 0 ? filters : undefined
+          filters: finalFilters
         })
 
         setProperties(response)
@@ -40,9 +125,12 @@ export default function PropertiesClientComponent() {
     loadProperties()
   }, [filters, currentPage])
 
+
   const handleFiltersChange = (newFilters: PropertyFilters) => {
     setFilters(newFilters)
     setCurrentPage(1) // Reset to first page when filters change
+    // Update URL with query parameters
+    updateURLWithFilters(newFilters)
   }
 
   const totalPages = properties ? Math.ceil(properties.total / propertiesPerPage) : 0
@@ -74,7 +162,67 @@ export default function PropertiesClientComponent() {
     <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       {/* Page Header */}
       <div className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Propiedades</h1>
+        <h1 className="text-3xl font-bold text-gray-900 mb-2">
+          {(() => {
+            if (pageTitle) return pageTitle
+
+            const operationType = filters.operation_type?.[0]
+            const propertyType = filters.property_type?.[0]
+
+            // Property type mapping for display (API IDs to display names in plural)
+            const propertyDisplayMap: { [key: string]: string } = {
+              '5791': 'Casas',
+              '5785': 'Departamentos',
+              '5790': 'Oficinas',
+              '5793': 'Chalets',
+              '5781': 'Casas Quinta',
+              '5795': 'Dúplex',
+              '5792': 'PH',
+              '5794': 'Terrenos',
+              '5780': 'Locales Comerciales'
+            }
+
+            // Operation type mapping for display (API values to display names)
+            const operationDisplayMap: { [key: string]: string } = {
+              'VENTA': 'en Venta',
+              'ALQUILER_PERMANENTE': 'en Alquiler',
+              'ALQUILER_TEMPORARIO': 'Alquiler Temporario'
+            }
+
+            if (operationType) {
+              const location = filters.location
+
+              if (propertyType) {
+                // Case: Tipología + Operación -> "Departamentos en Venta"
+                const propertyName = propertyDisplayMap[propertyType]
+                const operationName = operationDisplayMap[operationType]
+                let title = `${propertyName} ${operationName}`
+
+                // Add location if present: "Departamentos en Venta en Coghlan"
+                if (location) {
+                  title += ` en ${location}`
+                }
+
+                return title
+              } else {
+                // Case: Solo Operación -> "Propiedades en Venta"
+                let title = ''
+                if (operationType === 'VENTA') title = 'Propiedades en Venta'
+                else if (operationType === 'ALQUILER_PERMANENTE') title = 'Propiedades en Alquiler'
+                else if (operationType === 'ALQUILER_TEMPORARIO') title = 'Propiedades Alquiler Temporario'
+
+                // Add location if present: "Propiedades en Venta en Coghlan"
+                if (location && title) {
+                  title += ` en ${location}`
+                }
+
+                return title
+              }
+            }
+
+            return pageTitle || 'Propiedades'
+          })()}
+        </h1>
         <p className="text-gray-600">
           {properties && !loading ? (
             `${properties.total} propiedades encontradas`
@@ -85,7 +233,12 @@ export default function PropertiesClientComponent() {
       </div>
 
       {/* Horizontal Filters */}
-      <PropertyFilters onFiltersChange={handleFiltersChange} isLoading={loading} />
+      <PropertyFilters
+        onFiltersChange={handleFiltersChange}
+        isLoading={loading}
+        initialFilters={filters}
+        config={config}
+      />
 
       {/* Results Section */}
       <div>
@@ -136,7 +289,7 @@ export default function PropertiesClientComponent() {
             {/* Properties Grid - 3 columns */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
               {properties.data.map((property) => (
-                <PropertyCard key={property.propertyId} property={property} />
+                <PropertyCard key={property.propertyId} property={property} config={config} />
               ))}
             </div>
 

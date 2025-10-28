@@ -14,6 +14,7 @@ export default function PropertyDetailClient({ propertyId }: PropertyDetailClien
   const [error, setError] = useState<string | null>(null)
   const [selectedImageIndex, setSelectedImageIndex] = useState(0)
   const [showImageModal, setShowImageModal] = useState(false)
+  const [imageLoading, setImageLoading] = useState(false)
 
   // Fetch property details
   useEffect(() => {
@@ -153,14 +154,18 @@ export default function PropertyDetailClient({ propertyId }: PropertyDetailClien
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 mb-8">
         {/* Main Image */}
         <div className="lg:col-span-3">
-          <div className="relative h-96 lg:h-[500px] rounded-lg overflow-hidden cursor-pointer group"
-               onClick={() => setShowImageModal(true)}>
+          <div className="relative h-96 lg:h-[500px] rounded-lg overflow-hidden group">
             <img
+              key={selectedImageIndex} // Force re-render for animation
               src={images[selectedImageIndex]?.url || '/placeholder-property.svg'}
               alt={title}
-              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+              className={`w-full h-full object-cover group-hover:scale-105 transition-all duration-500 ${
+                imageLoading ? 'opacity-0' : 'opacity-100'
+              }`}
+              onLoad={() => setImageLoading(false)}
               onError={(e) => {
                 (e.target as HTMLImageElement).src = '/placeholder-property.svg'
+                setImageLoading(false)
               }}
             />
             {/* Overlay with view more button */}
@@ -176,6 +181,64 @@ export default function PropertyDetailClient({ propertyId }: PropertyDetailClien
                 {operationTypeName}
               </span>
             </div>
+
+            {/* Gallery Button */}
+            <button
+              onClick={() => setShowImageModal(true)}
+              className="absolute top-4 right-4 bg-black bg-opacity-60 hover:bg-opacity-80 text-white p-2 rounded-lg transition-all duration-200 flex items-center gap-2"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+              <span className="text-sm font-medium">{images.length}</span>
+            </button>
+
+            {/* Navigation Arrows */}
+            {images.length > 1 && (
+              <>
+                {/* Previous Arrow */}
+                <button
+                  onClick={(e) => {
+                    e.preventDefault()
+                    e.stopPropagation()
+                    const prevIndex = selectedImageIndex === 0 ? images.length - 1 : selectedImageIndex - 1
+                    if (prevIndex !== selectedImageIndex) {
+                      setImageLoading(true)
+                      setTimeout(() => setSelectedImageIndex(prevIndex), 50)
+                    }
+                  }}
+                  className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-60 hover:bg-opacity-80 text-white p-2 rounded-full transition-all duration-200 opacity-0 group-hover:opacity-100 z-20"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
+                  </svg>
+                </button>
+
+                {/* Next Arrow */}
+                <button
+                  onClick={(e) => {
+                    e.preventDefault()
+                    e.stopPropagation()
+                    const nextIndex = selectedImageIndex === images.length - 1 ? 0 : selectedImageIndex + 1
+                    if (nextIndex !== selectedImageIndex) {
+                      setImageLoading(true)
+                      setTimeout(() => setSelectedImageIndex(nextIndex), 50)
+                    }
+                  }}
+                  className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-60 hover:bg-opacity-80 text-white p-2 rounded-full transition-all duration-200 opacity-0 group-hover:opacity-100 z-20"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
+                  </svg>
+                </button>
+              </>
+            )}
+
+            {/* Click overlay for modal */}
+            <div
+              className="absolute inset-0 cursor-pointer"
+              onClick={() => setShowImageModal(true)}
+            ></div>
           </div>
         </div>
 
@@ -185,9 +248,14 @@ export default function PropertyDetailClient({ propertyId }: PropertyDetailClien
             <div
               key={image.imageId}
               className={`relative h-20 lg:h-24 rounded-lg overflow-hidden cursor-pointer border-2 transition-all duration-200 ${
-                selectedImageIndex === index ? 'border-orange-500' : 'border-transparent hover:border-gray-300'
+                selectedImageIndex === index ? 'border-orange-500 shadow-lg' : 'border-transparent hover:border-gray-300'
               }`}
-              onClick={() => setSelectedImageIndex(index)}
+              onClick={() => {
+                if (index !== selectedImageIndex) {
+                  setImageLoading(true)
+                  setTimeout(() => setSelectedImageIndex(index), 50)
+                }
+              }}
             >
               <img
                 src={image.thumbnailUrl || image.url}
@@ -383,7 +451,7 @@ export default function PropertyDetailClient({ propertyId }: PropertyDetailClien
             <div className="relative h-64 bg-gray-200 rounded-lg overflow-hidden">
               {property.lat && property.long ? (
                 <iframe
-                  src={`https://www.google.com/maps/embed/v1/place?key=YOUR_API_KEY&q=${property.lat},${property.long}&zoom=15`}
+                  src={`https://maps.google.com/maps?q=${property.lat},${property.long}&t=&z=15&ie=UTF8&iwloc=&output=embed`}
                   width="100%"
                   height="100%"
                   style={{ border: 0 }}
@@ -391,9 +459,7 @@ export default function PropertyDetailClient({ propertyId }: PropertyDetailClien
                   loading="lazy"
                   referrerPolicy="no-referrer-when-downgrade"
                   className="absolute inset-0"
-                  onError={() => {
-                    // Fallback to static map if Google Maps API fails
-                  }}
+                  title={`Mapa de ${property.address}`}
                 />
               ) : (
                 <div className="absolute inset-0 flex items-center justify-center">
@@ -554,9 +620,10 @@ export default function PropertyDetailClient({ propertyId }: PropertyDetailClien
             </button>
 
             <img
+              key={selectedImageIndex}
               src={images[selectedImageIndex]?.url}
               alt={title}
-              className="w-full h-auto max-h-[80vh] object-contain rounded-lg"
+              className="w-full h-auto max-h-[80vh] object-contain rounded-lg transition-opacity duration-300"
             />
 
             {/* Image Navigation */}

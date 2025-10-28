@@ -1,16 +1,46 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { PropertyFilters as IPropertyFilters, PROPERTY_TYPES, OPERATION_TYPES, BEDROOMS_OPTIONS, ROOMS_OPTIONS, CURRENCY_OPTIONS } from '@/lib/properties-api'
+import LocationAutocomplete from './LocationAutocomplete'
 
 interface PropertyFiltersProps {
   onFiltersChange: (filters: IPropertyFilters) => void
   isLoading?: boolean
+  initialFilters?: IPropertyFilters
+  config?: {
+    primaryColor?: string
+    secondaryColor?: string
+  }
 }
 
-export default function PropertyFilters({ onFiltersChange, isLoading = false }: PropertyFiltersProps) {
-  const [filters, setFilters] = useState<IPropertyFilters>({})
+export default function PropertyFilters({ onFiltersChange, isLoading = false, initialFilters = {}, config }: PropertyFiltersProps) {
+  const [filters, setFilters] = useState<IPropertyFilters>(initialFilters)
+  // Estado temporal para los precios (no afecta filtros hasta que se presiona buscar)
+  const [tempPrices, setTempPrices] = useState({
+    min_price: initialFilters.min_price || '',
+    max_price: initialFilters.max_price || ''
+  })
+  const locationTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+
+  // Sync with external filters
+  useEffect(() => {
+    setFilters(initialFilters)
+    setTempPrices({
+      min_price: initialFilters.min_price || '',
+      max_price: initialFilters.max_price || ''
+    })
+  }, [initialFilters])
   const [showAdvanced, setShowAdvanced] = useState(false)
+
+  // Cleanup timeout cuando el componente se desmonta
+  useEffect(() => {
+    return () => {
+      if (locationTimeoutRef.current) {
+        clearTimeout(locationTimeoutRef.current)
+      }
+    }
+  }, [])
 
   const handleFilterChange = (key: keyof IPropertyFilters, value: any) => {
     const newFilters = { ...filters, [key]: value }
@@ -31,8 +61,25 @@ export default function PropertyFilters({ onFiltersChange, isLoading = false }: 
     handleFilterChange(key, newArray.length > 0 ? newArray : undefined)
   }
 
+  const applyPriceFilters = () => {
+    const newFilters = { ...filters }
+    if (tempPrices.min_price) {
+      newFilters.min_price = tempPrices.min_price
+    } else {
+      delete newFilters.min_price
+    }
+    if (tempPrices.max_price) {
+      newFilters.max_price = tempPrices.max_price
+    } else {
+      delete newFilters.max_price
+    }
+    setFilters(newFilters)
+    onFiltersChange(newFilters)
+  }
+
   const clearFilters = () => {
     setFilters({})
+    setTempPrices({ min_price: '', max_price: '' })
     onFiltersChange({})
   }
 
@@ -53,6 +100,50 @@ export default function PropertyFilters({ onFiltersChange, isLoading = false }: 
       {/* Main Filters Row */}
       <div className="p-4">
         <div className="flex flex-wrap items-center gap-4">
+          {/* Location Autocomplete */}
+          <div className="min-w-[168px] w-[240px]">
+            <LocationAutocomplete
+              value={filters.location || ''}
+              onInputChange={(value) => {
+                // Solo actualizar el estado local, NO disparar búsquedas
+                const newFilters = { ...filters }
+                // Limpiar IDs anteriores cuando se escribe texto libre
+                delete newFilters.neighborhood_id
+                delete newFilters.city_id
+                newFilters.location = value || undefined
+
+                setFilters(newFilters)
+
+                // Solo disparar búsqueda si se borra completamente el campo
+                if (!value) {
+                  onFiltersChange(newFilters)
+                }
+              }}
+              onLocationSelect={(value, locationId, locationType) => {
+                // Clear previous location filters
+                const newFilters = { ...filters }
+                delete newFilters.neighborhood_id
+                delete newFilters.city_id
+
+                if (value && locationId && locationType) {
+                  newFilters.location = value
+                  if (locationType === 'neighborhood') {
+                    newFilters.neighborhood_id = [locationId]
+                  } else if (locationType === 'city') {
+                    newFilters.city_id = [locationId]
+                  }
+                } else {
+                  newFilters.location = value || undefined
+                }
+
+                setFilters(newFilters)
+                onFiltersChange(newFilters) // Solo aquí se actualizan los filtros y URL
+              }}
+              placeholder="Ubicación"
+              disabled={isLoading}
+            />
+          </div>
+
           {/* Operation Type */}
           <div className="min-w-[140px]">
             <select
@@ -87,82 +178,90 @@ export default function PropertyFilters({ onFiltersChange, isLoading = false }: 
           <div className="flex items-center gap-2">
             <input
               type="number"
-              value={filters.min_price || ''}
-              onChange={(e) => handleFilterChange('min_price', e.target.value || undefined)}
+              value={tempPrices.min_price}
+              onChange={(e) => setTempPrices(prev => ({ ...prev, min_price: e.target.value }))}
               placeholder="Precio mín"
               className="w-28 px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-orange-500 focus:border-orange-500"
               disabled={isLoading}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  applyPriceFilters()
+                }
+              }}
             />
             <span className="text-gray-400 text-sm">-</span>
             <input
               type="number"
-              value={filters.max_price || ''}
-              onChange={(e) => handleFilterChange('max_price', e.target.value || undefined)}
+              value={tempPrices.max_price}
+              onChange={(e) => setTempPrices(prev => ({ ...prev, max_price: e.target.value }))}
               placeholder="Precio máx"
               className="w-28 px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-orange-500 focus:border-orange-500"
               disabled={isLoading}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  applyPriceFilters()
+                }
+              }}
             />
           </div>
 
-          {/* Bedrooms */}
-          <div className="min-w-[120px]">
-            <select
-              value={filters.amount_bedroom?.[0] || ''}
-              onChange={(e) => handleFilterChange('amount_bedroom', e.target.value ? [e.target.value] : undefined)}
-              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-orange-500 focus:border-orange-500 bg-white"
-              disabled={isLoading}
-            >
-              <option value="">Dormitorios</option>
-              {BEDROOMS_OPTIONS.map(bedroom => (
-                <option key={bedroom} value={bedroom}>
-                  {bedroom === '5' ? '5+' : bedroom} dorm
-                </option>
-              ))}
-            </select>
+          {/* Currency Checkboxes */}
+          <div className="flex flex-col gap-1">
+            <label className="flex items-center cursor-pointer">
+              <input
+                type="checkbox"
+                checked={filters.currency === 'U$D'}
+                onChange={(e) => handleFilterChange('currency', e.target.checked ? 'U$D' : undefined)}
+                className="rounded border-gray-300 text-orange-600 focus:ring-orange-500 focus:ring-offset-0"
+                disabled={isLoading}
+              />
+              <span className="ml-2 text-sm text-gray-700">USD</span>
+            </label>
+            <label className="flex items-center cursor-pointer">
+              <input
+                type="checkbox"
+                checked={filters.currency === 'AR$'}
+                onChange={(e) => handleFilterChange('currency', e.target.checked ? 'AR$' : undefined)}
+                className="rounded border-gray-300 text-orange-600 focus:ring-orange-500 focus:ring-offset-0"
+                disabled={isLoading}
+              />
+              <span className="ml-2 text-sm text-gray-700">ARS</span>
+            </label>
           </div>
 
-          {/* Currency */}
-          <div className="min-w-[100px]">
-            <select
-              value={filters.currency || ''}
-              onChange={(e) => handleFilterChange('currency', e.target.value || undefined)}
-              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-orange-500 focus:border-orange-500 bg-white"
-              disabled={isLoading}
-            >
-              <option value="">Moneda</option>
-              {CURRENCY_OPTIONS.map(currency => (
-                <option key={currency} value={currency}>{currency}</option>
-              ))}
-            </select>
-          </div>
+          {/* Search Button */}
+          <button
+            onClick={applyPriceFilters}
+            className="px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white text-sm rounded-md transition-colors flex items-center gap-2"
+            disabled={isLoading}
+            title="Buscar"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+            <span>Buscar</span>
+          </button>
 
           {/* Advanced Filters Button */}
           <button
             onClick={() => setShowAdvanced(!showAdvanced)}
-            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-orange-600 hover:text-orange-700 hover:bg-orange-50 rounded-md transition-colors"
+            className="flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-md transition-colors"
+            style={{
+              color: config?.primaryColor || '#f97316',
+              backgroundColor: 'transparent'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = `${config?.primaryColor || '#f97316'}10`
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = 'transparent'
+            }}
             disabled={isLoading}
           >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
-            </svg>
-            Más filtros
-            {getActiveFiltersCount() > 0 && (
-              <span className="bg-orange-500 text-white text-xs rounded-full px-2 py-0.5 min-w-[20px]">
-                {getActiveFiltersCount()}
-              </span>
-            )}
+            <span className="text-lg font-bold">+</span>
+            filtros
           </button>
 
-          {/* Clear Filters */}
-          {hasActiveFilters && (
-            <button
-              onClick={clearFilters}
-              className="text-sm text-gray-500 hover:text-gray-700 underline"
-              disabled={isLoading}
-            >
-              Limpiar filtros
-            </button>
-          )}
         </div>
       </div>
 

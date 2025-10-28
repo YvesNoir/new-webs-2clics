@@ -9,6 +9,7 @@ interface FeaturedPropertiesProps {
   config?: {
     companyName: string
     primaryColor: string
+    tagColor: string
   }
 }
 
@@ -89,7 +90,7 @@ export default function FeaturedProperties({ config }: FeaturedPropertiesProps =
   }
 
   return (
-    <section className="py-52 bg-gray-50">
+    <section className="my-[90px]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="text-center mb-12">
@@ -155,9 +156,10 @@ export default function FeaturedProperties({ config }: FeaturedPropertiesProps =
                   }}
                 />
                 <div className="absolute top-3 left-3">
-                  <span className={`px-3 py-1 rounded-full text-xs font-medium text-white ${
-                    property.operationType === 'VENTA' ? 'bg-green-500' : 'bg-blue-500'
-                  }`}>
+                  <span
+                    className="px-3 py-1 rounded-full text-xs font-medium text-white"
+                    style={{ backgroundColor: config?.tagColor || '#10b981' }}
+                  >
                     {OPERATION_TYPES[property.operationType as keyof typeof OPERATION_TYPES] || property.operationType}
                   </span>
                 </div>

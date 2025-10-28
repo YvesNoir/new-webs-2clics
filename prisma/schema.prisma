@@ -39,7 +39,12 @@ model SiteConfig {
   address         String?
   schedule        String?
   description     String?
-  heroVariant     String @default("variant1") // 'variant1', 'variant2', 'variant3'
+  mapUrl          String?
+  showMap         Boolean @default(true)
+  heroVariant     String @default("variant1") // 'variant1', 'variant2', 'variant3', 'variant4'
+  videoUrl        String? // YouTube video URL for variant4
+  heroTitle       String? // Custom hero title
+  heroSubtitle    String? // Custom hero subtitle
 
   // Redes sociales
   facebook        String?

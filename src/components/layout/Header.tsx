@@ -21,7 +21,7 @@ export default function Header({ config }: HeaderProps = {}) {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
 
   return (
-    <header className="bg-white shadow-sm relative z-50">
+    <header className="bg-white relative z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-20">
           {/* Logo */}
@@ -64,23 +64,6 @@ export default function Header({ config }: HeaderProps = {}) {
               Propiedades
             </Link>
 
-            <div className="relative group">
-              <button className="flex items-center text-gray-700 hover:text-orange-500 font-medium">
-                Servicios
-                <svg className="ml-1 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-                </svg>
-              </button>
-            </div>
-
-            <div className="relative group">
-              <button className="flex items-center text-gray-700 hover:text-orange-500 font-medium">
-                Blog
-                <svg className="ml-1 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-                </svg>
-              </button>
-            </div>
 
             <div className="relative group">
               <button className="flex items-center text-gray-700 hover:text-orange-500 font-medium">
@@ -137,12 +120,6 @@ export default function Header({ config }: HeaderProps = {}) {
               </Link>
               <Link href="/propiedades" className="text-gray-700 hover:text-orange-500 block px-3 py-2 rounded-md text-base font-medium">
                 Propiedades
-              </Link>
-              <Link href="/servicios" className="text-gray-700 hover:text-orange-500 block px-3 py-2 rounded-md text-base font-medium">
-                Servicios
-              </Link>
-              <Link href="/blog" className="text-gray-700 hover:text-orange-500 block px-3 py-2 rounded-md text-base font-medium">
-                Blog
               </Link>
               <Link href="/nosotros" className="text-gray-700 hover:text-orange-500 block px-3 py-2 rounded-md text-base font-medium">
                 Nosotros
