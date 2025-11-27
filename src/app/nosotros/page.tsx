@@ -81,88 +81,19 @@ export default function NosotrosPage() {
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <div className="bg-white rounded-lg shadow-lg p-8 md:p-12">
           <div className="space-y-8">
-            <div>
-              <h2 className="text-3xl font-bold text-gray-900 mb-4">
-                Nuestra Historia
-              </h2>
-              <p className="text-lg text-gray-700 leading-relaxed">
-                Con más de 15 años de experiencia en el mercado inmobiliario, nos hemos consolidado como
-                una de las inmobiliarias más confiables de la región. Comenzamos como un pequeño emprendimiento
-                familiar y hoy somos un equipo de profesionales especializados en ayudar a las personas a
-                encontrar su hogar perfecto.
-              </p>
-            </div>
-
-            <div>
-              <h2 className="text-3xl font-bold text-gray-900 mb-4">
-                Nuestra Misión
-              </h2>
-              <p className="text-lg text-gray-700 leading-relaxed">
-                Facilitar el proceso de compra, venta y alquiler de propiedades, brindando un servicio
-                personalizado y transparente. Nos enfocamos en entender las necesidades específicas de
-                cada cliente para ofrecerle las mejores opciones del mercado.
-              </p>
-            </div>
-
-            <div>
-              <h2 className="text-3xl font-bold text-gray-900 mb-4">
-                Nuestros Valores
-              </h2>
-              <div className="grid md:grid-cols-2 gap-6">
-                <div className="bg-orange-50 p-6 rounded-lg">
-                  <h3 className="text-xl font-semibold text-orange-800 mb-2">Transparencia</h3>
-                  <p className="text-gray-700">
-                    Información clara y honesta en cada transacción. Sin sorpresas ni costos ocultos.
-                  </p>
-                </div>
-                <div className="bg-blue-50 p-6 rounded-lg">
-                  <h3 className="text-xl font-semibold text-blue-800 mb-2">Profesionalismo</h3>
-                  <p className="text-gray-700">
-                    Equipo capacitado y experimentado para brindar el mejor asesoramiento.
-                  </p>
-                </div>
-                <div className="bg-green-50 p-6 rounded-lg">
-                  <h3 className="text-xl font-semibold text-green-800 mb-2">Confianza</h3>
-                  <p className="text-gray-700">
-                    Construimos relaciones duraderas basadas en la confianza mutua.
-                  </p>
-                </div>
-                <div className="bg-purple-50 p-6 rounded-lg">
-                  <h3 className="text-xl font-semibold text-purple-800 mb-2">Compromiso</h3>
-                  <p className="text-gray-700">
-                    Dedicados a lograr los objetivos de nuestros clientes con excelencia.
-                  </p>
+            {/* Contenido Adicional Dinámico */}
+            {config.nosotrosContent && (
+              <div>
+                <div className="prose prose-lg max-w-none">
+                  <div
+                    className="text-gray-700 leading-relaxed"
+                    dangerouslySetInnerHTML={{
+                      __html: config.nosotrosContent
+                    }}
+                  />
                 </div>
               </div>
-            </div>
-
-            <div>
-              <h2 className="text-3xl font-bold text-gray-900 mb-4">
-                Por Qué Elegirnos
-              </h2>
-              <ul className="space-y-4 text-lg text-gray-700">
-                <li className="flex items-start">
-                  <span className="text-orange-500 mr-3 text-xl">•</span>
-                  <span>Amplio portafolio de propiedades en las mejores ubicaciones</span>
-                </li>
-                <li className="flex items-start">
-                  <span className="text-orange-500 mr-3 text-xl">•</span>
-                  <span>Asesoramiento legal y financiero especializado</span>
-                </li>
-                <li className="flex items-start">
-                  <span className="text-orange-500 mr-3 text-xl">•</span>
-                  <span>Atención personalizada las 24 horas</span>
-                </li>
-                <li className="flex items-start">
-                  <span className="text-orange-500 mr-3 text-xl">•</span>
-                  <span>Tecnología de vanguardia para búsquedas más eficientes</span>
-                </li>
-                <li className="flex items-start">
-                  <span className="text-orange-500 mr-3 text-xl">•</span>
-                  <span>Garantía de satisfacción en todos nuestros servicios</span>
-                </li>
-              </ul>
-            </div>
+            )}
           </div>
         </div>
       </div>

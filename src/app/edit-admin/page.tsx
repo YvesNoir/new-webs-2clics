@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
+import RichTextEditor from '@/components/admin/RichTextEditor'
 
 export default function AdminDashboard() {
   const [isLoading, setIsLoading] = useState(true)
@@ -1416,6 +1417,20 @@ export default function AdminDashboard() {
                           value={siteConfig.nosotrosDescription || ''}
                           onChange={(e) => updateSiteConfigLocal({ ...siteConfig, nosotrosDescription: e.target.value })}
                           className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Contenido Adicional
+                        </label>
+                        <p className="text-xs text-gray-500 mb-2">
+                          Puedes agregar información adicional como nuestra historia, misión, valores, etc. Usa las herramientas de formato para crear contenido atractivo.
+                        </p>
+                        <RichTextEditor
+                          content={siteConfig.nosotrosContent || ''}
+                          onChange={(content) => updateSiteConfigLocal({ ...siteConfig, nosotrosContent: content })}
+                          placeholder="Escribe aquí contenido adicional sobre tu inmobiliaria..."
                         />
                       </div>
                     </div>

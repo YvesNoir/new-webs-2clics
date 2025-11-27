@@ -65,7 +65,8 @@ model SiteConfig {
 
   // Configuración página Nosotros
   nosotrosTitle   String? @default("Sobre Nosotros")
-  nosotrosDescription String? @default("Somos una inmobiliaria comprometida con brindar el mejor servicio para que encuentres tu hogar ideal.") // Contenido adicional tipo editor de texto
+  nosotrosDescription String? @default("Somos una inmobiliaria comprometida con brindar el mejor servicio para que encuentres tu hogar ideal.")
+  nosotrosContent String? // Contenido adicional tipo editor de texto
 
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt

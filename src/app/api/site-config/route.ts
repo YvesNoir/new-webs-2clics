@@ -42,7 +42,8 @@ export async function GET() {
           contactTitle: 'Contacto',
           contactDescription: '¿Tienes alguna pregunta? Estamos aquí para ayudarte. Ponte en contacto con nosotros y te responderemos lo antes posible.',
           nosotrosTitle: 'Sobre Nosotros',
-          nosotrosDescription: 'Somos una inmobiliaria comprometida con brindar el mejor servicio para que encuentres tu hogar ideal.'
+          nosotrosDescription: 'Somos una inmobiliaria comprometida con brindar el mejor servicio para que encuentres tu hogar ideal.',
+          nosotrosContent: ''
         }
       })
       return NextResponse.json(defaultConfig)
@@ -110,7 +111,8 @@ export async function PUT(request: NextRequest) {
           contactTitle: data.contactTitle,
           contactDescription: data.contactDescription,
           nosotrosTitle: data.nosotrosTitle,
-          nosotrosDescription: data.nosotrosDescription
+          nosotrosDescription: data.nosotrosDescription,
+          nosotrosContent: data.nosotrosContent
         }
       })
     } else {
@@ -148,7 +150,8 @@ export async function PUT(request: NextRequest) {
           contactTitle: data.contactTitle,
           contactDescription: data.contactDescription,
           nosotrosTitle: data.nosotrosTitle,
-          nosotrosDescription: data.nosotrosDescription
+          nosotrosDescription: data.nosotrosDescription,
+          nosotrosContent: data.nosotrosContent
         }
       })
     }
