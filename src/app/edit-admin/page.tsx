@@ -6,13 +6,15 @@ import { useRouter } from 'next/navigation'
 export default function AdminDashboard() {
   const [isLoading, setIsLoading] = useState(true)
   const [isAuthenticated, setIsAuthenticated] = useState(false)
-  const [activeTab, setActiveTab] = useState<'site-config' | 'page-config' | 'contact-config'>('site-config')
+  const [activeTab, setActiveTab] = useState<'site-config' | 'page-config' | 'contact-config' | 'nosotros-config'>('site-config')
   const [isSaving, setIsSaving] = useState(false)
   const [saveMessage, setSaveMessage] = useState('')
   const [isSavingPage, setIsSavingPage] = useState(false)
   const [pageSaveMessage, setPageSaveMessage] = useState('')
   const [isSavingContact, setIsSavingContact] = useState(false)
   const [contactSaveMessage, setContactSaveMessage] = useState('')
+  const [isSavingNosotros, setIsSavingNosotros] = useState(false)
+  const [nosotrosSaveMessage, setNosotrosSaveMessage] = useState('')
   const [isUploadingLogo, setIsUploadingLogo] = useState(false)
   const [isUploadingFavicon, setIsUploadingFavicon] = useState(false)
   const [siteConfig, setSiteConfig] = useState({
@@ -44,6 +46,8 @@ export default function AdminDashboard() {
     heroSubtitle: '',
     contactTitle: '',
     contactDescription: '',
+    nosotrosTitle: '',
+    nosotrosDescription: '',
 
     // Redes sociales
     facebook: '',
@@ -108,6 +112,8 @@ export default function AdminDashboard() {
           heroSubtitle: config.heroSubtitle || '',
           contactTitle: config.contactTitle || '',
           contactDescription: config.contactDescription || '',
+          nosotrosTitle: config.nosotrosTitle || '',
+          nosotrosDescription: config.nosotrosDescription || '',
           facebook: config.facebook || '',
           instagram: config.instagram || '',
           twitter: config.twitter || '',
@@ -228,6 +234,38 @@ export default function AdminDashboard() {
     }
   }
 
+  // Función para guardar configuración de nosotros
+  const updateNosotrosConfig = async () => {
+    setIsSavingNosotros(true)
+    setNosotrosSaveMessage('')
+    try {
+      // Guardar configuración completa incluyendo nosotrosTitle y nosotrosDescription
+      const response = await fetch('/api/site-config', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(siteConfig),
+        credentials: 'include'
+      })
+
+      if (response.ok) {
+        setNosotrosSaveMessage('¡Configuración de nosotros guardada exitosamente!')
+        // Refrescar el preview después de guardar en el servidor
+        refreshPreview()
+        // Limpiar mensaje después de 3 segundos
+        setTimeout(() => setNosotrosSaveMessage(''), 3000)
+      } else {
+        setNosotrosSaveMessage('Error al guardar la configuración de nosotros')
+      }
+    } catch (error) {
+      console.error('Error updating nosotros config:', error)
+      setNosotrosSaveMessage('Error al guardar la configuración de nosotros')
+    } finally {
+      setIsSavingNosotros(false)
+    }
+  }
+
   // Función para actualizar config sin guardar (solo preview en tiempo real)
   const updateSiteConfigLocal = (newConfig: typeof siteConfig) => {
     setSiteConfig(newConfig)
@@ -310,7 +348,10 @@ export default function AdminDashboard() {
 
   const refreshPreview = () => {
     if (iframeRef.current) {
-      const baseUrl = activeTab === 'contact-config' ? '/contacto' : '/preview'
+      const baseUrl =
+        activeTab === 'contact-config' ? '/contacto' :
+        activeTab === 'nosotros-config' ? '/nosotros' :
+        '/preview'
       iframeRef.current.src = `${baseUrl}?t=${Date.now()}`
     }
   }
@@ -403,6 +444,16 @@ export default function AdminDashboard() {
                   }`}
                 >
                   Configuración de Contacto
+                </button>
+                <button
+                  onClick={() => setActiveTab('nosotros-config')}
+                  className={`w-full py-2 px-3 text-sm font-medium rounded-md transition-colors mt-1 ${
+                    activeTab === 'nosotros-config'
+                      ? 'bg-white text-gray-900 shadow-sm'
+                      : 'text-gray-600 hover:text-gray-900'
+                  }`}
+                >
+                  Configuración de Nosotros
                 </button>
               </div>
             </div>
@@ -1334,6 +1385,73 @@ export default function AdminDashboard() {
                 </div>
               )}
 
+              {activeTab === 'nosotros-config' && (
+                <div className="space-y-6">
+                  {/* Configuración de la Página de Nosotros */}
+                  <div>
+                    <h3 className="text-md font-medium text-gray-900 mb-4">
+                      Configuración de la Página de Nosotros
+                    </h3>
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Título Principal
+                        </label>
+                        <input
+                          type="text"
+                          placeholder="Sobre Nosotros"
+                          value={siteConfig.nosotrosTitle || ''}
+                          onChange={(e) => updateSiteConfigLocal({ ...siteConfig, nosotrosTitle: e.target.value })}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Descripción
+                        </label>
+                        <textarea
+                          rows={3}
+                          placeholder="Somos una inmobiliaria comprometida con brindar el mejor servicio..."
+                          value={siteConfig.nosotrosDescription || ''}
+                          onChange={(e) => updateSiteConfigLocal({ ...siteConfig, nosotrosDescription: e.target.value })}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Save Button */}
+                  <div className="pt-6 border-t">
+                    <button
+                      onClick={updateNosotrosConfig}
+                      disabled={isSavingNosotros}
+                      className="w-full font-medium py-3 px-4 rounded-lg transition-colors bg-orange-500 hover:bg-orange-600 text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {isSavingNosotros ? (
+                        <div className="flex items-center justify-center">
+                          <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                            <path className="opacity-75" fill="currentColor" d="m4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                          </svg>
+                          <span>Guardando...</span>
+                        </div>
+                      ) : (
+                        'Guardar Configuración de Nosotros'
+                      )}
+                    </button>
+                    {/* Nosotros Save Message */}
+                    {nosotrosSaveMessage && (
+                      <div className={`mt-3 text-center text-sm font-medium ${
+                        nosotrosSaveMessage.includes('Error') ? 'text-red-600' : 'text-green-600'
+                      }`}>
+                        {nosotrosSaveMessage}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
             </div>
         </div>
 
@@ -1373,7 +1491,11 @@ export default function AdminDashboard() {
 
               <iframe
                 ref={iframeRef}
-                src={activeTab === 'contact-config' ? '/contacto' : '/preview'}
+                src={
+                  activeTab === 'contact-config' ? '/contacto' :
+                  activeTab === 'nosotros-config' ? '/nosotros' :
+                  '/preview'
+                }
                 className="w-full h-[calc(100%-40px)] border-0"
                 title="Vista Previa del Sitio Web"
               />

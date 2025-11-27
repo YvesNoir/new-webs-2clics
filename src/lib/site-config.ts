@@ -31,6 +31,9 @@ export interface SiteConfig {
   // Configuración página Contacto
   contactTitle?: string
   contactDescription?: string
+  // Configuración página Nosotros
+  nosotrosTitle?: string
+  nosotrosDescription?: string
 }
 
 export async function getSiteConfig(): Promise<SiteConfig> {
@@ -62,7 +65,9 @@ export async function getSiteConfig(): Promise<SiteConfig> {
       aboutSubtitle: 'Somos una inmobiliaria comprometida con brindar el mejor servicio para que encuentres tu hogar ideal.',
       aboutContent: '',
       contactTitle: 'Contacto',
-      contactDescription: '¿Tienes alguna pregunta? Estamos aquí para ayudarte. Ponte en contacto con nosotros y te responderemos lo antes posible.'
+      contactDescription: '¿Tienes alguna pregunta? Estamos aquí para ayudarte. Ponte en contacto con nosotros y te responderemos lo antes posible.',
+      nosotrosTitle: 'Sobre Nosotros',
+      nosotrosDescription: 'Somos una inmobiliaria comprometida con brindar el mejor servicio para que encuentres tu hogar ideal.'
     }
   } catch (error) {
     console.error('Error fetching site config:', error)
@@ -92,7 +97,9 @@ export async function getSiteConfig(): Promise<SiteConfig> {
       aboutSubtitle: 'Somos una inmobiliaria comprometida con brindar el mejor servicio para que encuentres tu hogar ideal.',
       aboutContent: '',
       contactTitle: 'Contacto',
-      contactDescription: '¿Tienes alguna pregunta? Estamos aquí para ayudarte. Ponte en contacto con nosotros y te responderemos lo antes posible.'
+      contactDescription: '¿Tienes alguna pregunta? Estamos aquí para ayudarte. Ponte en contacto con nosotros y te responderemos lo antes posible.',
+      nosotrosTitle: 'Sobre Nosotros',
+      nosotrosDescription: 'Somos una inmobiliaria comprometida con brindar el mejor servicio para que encuentres tu hogar ideal.'
     }
   }
 }

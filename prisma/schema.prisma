@@ -61,7 +61,11 @@ model SiteConfig {
 
   // Configuración página Contacto
   contactTitle    String? @default("Contacto")
-  contactDescription String? @default("¿Tienes alguna pregunta? Estamos aquí para ayudarte. Ponte en contacto con nosotros y te responderemos lo antes posible.") // Contenido adicional tipo editor de texto
+  contactDescription String? @default("¿Tienes alguna pregunta? Estamos aquí para ayudarte. Ponte en contacto con nosotros y te responderemos lo antes posible.")
+
+  // Configuración página Nosotros
+  nosotrosTitle   String? @default("Sobre Nosotros")
+  nosotrosDescription String? @default("Somos una inmobiliaria comprometida con brindar el mejor servicio para que encuentres tu hogar ideal.") // Contenido adicional tipo editor de texto
 
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
