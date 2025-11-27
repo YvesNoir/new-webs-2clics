@@ -38,7 +38,9 @@ export async function GET() {
           youtube: '',
           aboutTitle: 'Sobre Nosotros',
           aboutSubtitle: 'Somos una inmobiliaria comprometida con brindar el mejor servicio para que encuentres tu hogar ideal.',
-          aboutContent: ''
+          aboutContent: '',
+          contactTitle: 'Contacto',
+          contactDescription: '¿Tienes alguna pregunta? Estamos aquí para ayudarte. Ponte en contacto con nosotros y te responderemos lo antes posible.'
         }
       })
       return NextResponse.json(defaultConfig)
@@ -102,7 +104,9 @@ export async function PUT(request: NextRequest) {
           youtube: data.youtube,
           aboutTitle: data.aboutTitle,
           aboutSubtitle: data.aboutSubtitle,
-          aboutContent: data.aboutContent
+          aboutContent: data.aboutContent,
+          contactTitle: data.contactTitle,
+          contactDescription: data.contactDescription
         }
       })
     } else {
@@ -136,7 +140,9 @@ export async function PUT(request: NextRequest) {
           youtube: data.youtube,
           aboutTitle: data.aboutTitle,
           aboutSubtitle: data.aboutSubtitle,
-          aboutContent: data.aboutContent
+          aboutContent: data.aboutContent,
+          contactTitle: data.contactTitle,
+          contactDescription: data.contactDescription
         }
       })
     }

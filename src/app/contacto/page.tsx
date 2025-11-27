@@ -1,19 +1,11 @@
-import { getSiteConfig } from '@/lib/site-config'
+'use client'
+
+import { useState, useEffect } from 'react'
 import Header from '@/components/layout/Header'
 import Footer from '@/components/layout/Footer'
 import ContactForm from './ContactForm'
 import DynamicStyles from '@/components/DynamicStyles'
 import DynamicFavicon from '@/components/DynamicFavicon'
-import { Metadata } from 'next'
-
-export async function generateMetadata(): Promise<Metadata> {
-  const config = await getSiteConfig()
-
-  return {
-    title: `Contacto | ${config.companyName}`,
-    description: config.siteDescription || 'Ponte en contacto con nosotros. Estamos aquí para ayudarte con todas tus necesidades inmobiliarias.',
-  }
-}
 
 // Function to convert Google Maps URL to embed URL
 const convertToEmbedUrl = (url: string) => {
@@ -56,8 +48,57 @@ const convertToEmbedUrl = (url: string) => {
   }
 }
 
-export default async function ContactoPage() {
-  const config = await getSiteConfig()
+export default function ContactoPage() {
+  const [config, setConfig] = useState({
+    companyName: 'Inmobiliaria Homez',
+    siteTitle: 'Inmobiliaria Homez - Propiedades de Calidad',
+    siteDescription: 'Tu inmobiliaria de confianza, especializada en la venta y alquiler de propiedades',
+    logo: '',
+    favicon: '',
+    address: '',
+    schedule: '',
+    phone: '',
+    whatsapp: '',
+    email: '',
+    primaryColor: '#f97316',
+    secondaryColor: '#1f2937',
+    mapUrl: '',
+    showMap: true,
+    contactTitle: 'Contacto',
+    contactDescription: '¿Tienes alguna pregunta? Estamos aquí para ayudarte. Ponte en contacto con nosotros y te responderemos lo antes posible.',
+    facebook: '',
+    instagram: '',
+    twitter: '',
+    linkedin: '',
+    tiktok: '',
+    youtube: '',
+  })
+
+  const getContactData = async () => {
+    try {
+      const response = await fetch('/api/site-config')
+      if (response.ok) {
+        const configData = await response.json()
+        setConfig(configData)
+      }
+    } catch (error) {
+      console.error('Error loading contact data:', error)
+    }
+  }
+
+  useEffect(() => {
+    getContactData()
+
+    // Escuchar mensajes del admin panel para actualizaciones en tiempo real
+    const handleMessage = (event: MessageEvent) => {
+      if (event.data.type === 'updateSiteConfig') {
+        setConfig(event.data.config)
+      }
+    }
+
+    window.addEventListener('message', handleMessage)
+    return () => window.removeEventListener('message', handleMessage)
+  }, [])
 
   return (
     <>
@@ -72,10 +113,10 @@ export default async function ContactoPage() {
           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center">
               <h1 className="text-4xl font-bold text-gray-900 mb-4">
-                Contacto
+                {config.contactTitle || 'Contacto'}
               </h1>
               <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-                ¿Tienes alguna pregunta? Estamos aquí para ayudarte. Ponte en contacto con nosotros y te responderemos lo antes posible.
+                {config.contactDescription || '¿Tienes alguna pregunta? Estamos aquí para ayudarte. Ponte en contacto con nosotros y te responderemos lo antes posible.'}
               </p>
             </div>
           </div>

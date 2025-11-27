@@ -11,6 +11,8 @@ export default function AdminDashboard() {
   const [saveMessage, setSaveMessage] = useState('')
   const [isSavingPage, setIsSavingPage] = useState(false)
   const [pageSaveMessage, setPageSaveMessage] = useState('')
+  const [isSavingContact, setIsSavingContact] = useState(false)
+  const [contactSaveMessage, setContactSaveMessage] = useState('')
   const [isUploadingLogo, setIsUploadingLogo] = useState(false)
   const [isUploadingFavicon, setIsUploadingFavicon] = useState(false)
   const [siteConfig, setSiteConfig] = useState({
@@ -40,6 +42,8 @@ export default function AdminDashboard() {
     videoUrl: '',
     heroTitle: '',
     heroSubtitle: '',
+    contactTitle: '',
+    contactDescription: '',
 
     // Redes sociales
     facebook: '',
@@ -102,6 +106,8 @@ export default function AdminDashboard() {
           videoUrl: config.videoUrl || '',
           heroTitle: config.heroTitle || '',
           heroSubtitle: config.heroSubtitle || '',
+          contactTitle: config.contactTitle || '',
+          contactDescription: config.contactDescription || '',
           facebook: config.facebook || '',
           instagram: config.instagram || '',
           twitter: config.twitter || '',
@@ -160,16 +166,13 @@ export default function AdminDashboard() {
     setPageSaveMessage('')
 
     try {
-      // Guardar solo el heroVariant en la configuración del sitio
+      // Guardar configuración completa incluyendo heroVariant, heroTitle, heroSubtitle
       const response = await fetch('/api/site-config', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          ...siteConfig,
-          heroVariant: siteConfig.heroVariant
-        }),
+        body: JSON.stringify(siteConfig),
         credentials: 'include'
       })
 
@@ -190,6 +193,38 @@ export default function AdminDashboard() {
       setPageSaveMessage('Error al guardar la configuración de la página')
     } finally {
       setIsSavingPage(false)
+    }
+  }
+
+  // Función para guardar configuración de contacto
+  const updateContactConfig = async () => {
+    setIsSavingContact(true)
+    setContactSaveMessage('')
+    try {
+      // Guardar configuración completa incluyendo contactTitle y contactDescription
+      const response = await fetch('/api/site-config', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(siteConfig),
+        credentials: 'include'
+      })
+
+      if (response.ok) {
+        setContactSaveMessage('¡Configuración de contacto guardada exitosamente!')
+        // Refrescar el preview después de guardar en el servidor
+        refreshPreview()
+        // Limpiar mensaje después de 3 segundos
+        setTimeout(() => setContactSaveMessage(''), 3000)
+      } else {
+        setContactSaveMessage('Error al guardar la configuración de contacto')
+      }
+    } catch (error) {
+      console.error('Error updating contact config:', error)
+      setContactSaveMessage('Error al guardar la configuración de contacto')
+    } finally {
+      setIsSavingContact(false)
     }
   }
 
@@ -275,7 +310,8 @@ export default function AdminDashboard() {
 
   const refreshPreview = () => {
     if (iframeRef.current) {
-      iframeRef.current.src = `/preview?t=${Date.now()}`
+      const baseUrl = activeTab === 'contact-config' ? '/contacto' : '/preview'
+      iframeRef.current.src = `${baseUrl}?t=${Date.now()}`
     }
   }
 
@@ -299,6 +335,11 @@ export default function AdminDashboard() {
       loadSiteData()
     }
   }, [isAuthenticated])
+
+  // Actualizar iframe cuando cambia activeTab
+  useEffect(() => {
+    refreshPreview()
+  }, [activeTab])
 
   if (isLoading) {
     return (
@@ -1121,6 +1162,8 @@ export default function AdminDashboard() {
                         <input
                           type="text"
                           placeholder="Contacto"
+                          value={siteConfig.contactTitle || ''}
+                          onChange={(e) => updateSiteConfigLocal({ ...siteConfig, contactTitle: e.target.value })}
                           className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
                         />
                       </div>
@@ -1132,6 +1175,8 @@ export default function AdminDashboard() {
                         <textarea
                           rows={3}
                           placeholder="¿Tienes alguna pregunta? Estamos aquí para ayudarte..."
+                          value={siteConfig.contactDescription || ''}
+                          onChange={(e) => updateSiteConfigLocal({ ...siteConfig, contactDescription: e.target.value })}
                           className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
                         />
                       </div>
@@ -1261,10 +1306,30 @@ export default function AdminDashboard() {
                   {/* Save Button */}
                   <div className="pt-6 border-t">
                     <button
-                      className="w-full font-medium py-3 px-4 rounded-lg transition-colors bg-orange-500 hover:bg-orange-600 text-white"
+                      onClick={updateContactConfig}
+                      disabled={isSavingContact}
+                      className="w-full font-medium py-3 px-4 rounded-lg transition-colors bg-orange-500 hover:bg-orange-600 text-white disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      Guardar Configuración de Contacto
+                      {isSavingContact ? (
+                        <div className="flex items-center justify-center">
+                          <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                            <path className="opacity-75" fill="currentColor" d="m4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                          </svg>
+                          <span>Guardando...</span>
+                        </div>
+                      ) : (
+                        'Guardar Configuración de Contacto'
+                      )}
                     </button>
+                    {/* Contact Save Message */}
+                    {contactSaveMessage && (
+                      <div className={`mt-3 text-center text-sm font-medium ${
+                        contactSaveMessage.includes('Error') ? 'text-red-600' : 'text-green-600'
+                      }`}>
+                        {contactSaveMessage}
+                      </div>
+                    )}
                   </div>
                 </div>
               )}
@@ -1308,7 +1373,7 @@ export default function AdminDashboard() {
 
               <iframe
                 ref={iframeRef}
-                src="/preview"
+                src={activeTab === 'contact-config' ? '/contacto' : '/preview'}
                 className="w-full h-[calc(100%-40px)] border-0"
                 title="Vista Previa del Sitio Web"
               />

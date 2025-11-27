@@ -28,6 +28,9 @@ export interface SiteConfig {
   aboutTitle?: string
   aboutSubtitle?: string
   aboutContent?: string
+  // Configuración página Contacto
+  contactTitle?: string
+  contactDescription?: string
 }
 
 export async function getSiteConfig(): Promise<SiteConfig> {
@@ -57,7 +60,9 @@ export async function getSiteConfig(): Promise<SiteConfig> {
       youtube: '',
       aboutTitle: 'Sobre Nosotros',
       aboutSubtitle: 'Somos una inmobiliaria comprometida con brindar el mejor servicio para que encuentres tu hogar ideal.',
-      aboutContent: ''
+      aboutContent: '',
+      contactTitle: 'Contacto',
+      contactDescription: '¿Tienes alguna pregunta? Estamos aquí para ayudarte. Ponte en contacto con nosotros y te responderemos lo antes posible.'
     }
   } catch (error) {
     console.error('Error fetching site config:', error)
@@ -85,7 +90,9 @@ export async function getSiteConfig(): Promise<SiteConfig> {
       youtube: '',
       aboutTitle: 'Sobre Nosotros',
       aboutSubtitle: 'Somos una inmobiliaria comprometida con brindar el mejor servicio para que encuentres tu hogar ideal.',
-      aboutContent: ''
+      aboutContent: '',
+      contactTitle: 'Contacto',
+      contactDescription: '¿Tienes alguna pregunta? Estamos aquí para ayudarte. Ponte en contacto con nosotros y te responderemos lo antes posible.'
     }
   }
 }
