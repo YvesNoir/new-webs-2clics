@@ -1,13 +1,29 @@
 import { Metadata } from 'next'
+import { getSiteConfig } from '@/lib/site-config'
+import Header from '@/components/layout/Header'
+import Footer from '@/components/layout/Footer'
+import DynamicStyles from '@/components/DynamicStyles'
+import DynamicFavicon from '@/components/DynamicFavicon'
 
-export const metadata: Metadata = {
-  title: 'Nosotros - Tu Inmobiliaria de Confianza',
-  description: 'Conoce más sobre nuestra inmobiliaria, nuestros valores y el compromiso que tenemos con nuestros clientes.',
+export async function generateMetadata(): Promise<Metadata> {
+  const config = await getSiteConfig()
+
+  return {
+    title: `Nosotros | ${config.companyName}`,
+    description: config.siteDescription || 'Conoce más sobre nuestra inmobiliaria, nuestros valores y el compromiso que tenemos con nuestros clientes.',
+  }
 }
 
-export default function NosotrosPage() {
+export default async function NosotrosPage() {
+  const config = await getSiteConfig()
+
   return (
-    <div className="min-h-screen bg-gray-50">
+    <>
+      <DynamicStyles primaryColor={config.primaryColor} secondaryColor={config.secondaryColor} />
+      <DynamicFavicon faviconUrl={config.favicon} />
+
+      <div className="min-h-screen bg-gray-50">
+        <Header config={config} />
       {/* Hero Section */}
       <div className="bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
@@ -111,6 +127,9 @@ export default function NosotrosPage() {
           </div>
         </div>
       </div>
-    </div>
+
+        <Footer config={config} />
+      </div>
+    </>
   )
 }
