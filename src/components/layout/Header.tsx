@@ -51,28 +51,18 @@ export default function Header({ config }: HeaderProps = {}) {
 
           {/* Desktop Navigation */}
           <nav className="hidden lg:flex items-center space-x-8 ml-auto">
-            <div className="relative group">
-              <button className="flex items-center text-gray-700 hover:text-orange-500 font-medium">
-                Inicio
-                <svg className="ml-1 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-                </svg>
-              </button>
-            </div>
+            <Link href="/" className="text-gray-700 hover:text-orange-500 font-medium">
+              Inicio
+            </Link>
 
             <Link href="/propiedades" className="text-gray-700 hover:text-orange-500 font-medium">
               Propiedades
             </Link>
 
 
-            <div className="relative group">
-              <button className="flex items-center text-gray-700 hover:text-orange-500 font-medium">
-                Nosotros
-                <svg className="ml-1 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-                </svg>
-              </button>
-            </div>
+            <Link href="/nosotros" className="text-gray-700 hover:text-orange-500 font-medium">
+              Nosotros
+            </Link>
 
             <Link href="/contacto" className="text-gray-700 hover:text-orange-500 font-medium">
               Contacto

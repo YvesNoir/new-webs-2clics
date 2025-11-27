@@ -24,6 +24,10 @@ export interface SiteConfig {
   linkedin?: string
   tiktok?: string
   youtube?: string
+  // Configuración página Nosotros
+  aboutTitle?: string
+  aboutSubtitle?: string
+  aboutContent?: string
 }
 
 export async function getSiteConfig(): Promise<SiteConfig> {
@@ -50,7 +54,10 @@ export async function getSiteConfig(): Promise<SiteConfig> {
       twitter: '',
       linkedin: '',
       tiktok: '',
-      youtube: ''
+      youtube: '',
+      aboutTitle: 'Sobre Nosotros',
+      aboutSubtitle: 'Somos una inmobiliaria comprometida con brindar el mejor servicio para que encuentres tu hogar ideal.',
+      aboutContent: ''
     }
   } catch (error) {
     console.error('Error fetching site config:', error)
@@ -75,7 +82,10 @@ export async function getSiteConfig(): Promise<SiteConfig> {
       twitter: '',
       linkedin: '',
       tiktok: '',
-      youtube: ''
+      youtube: '',
+      aboutTitle: 'Sobre Nosotros',
+      aboutSubtitle: 'Somos una inmobiliaria comprometida con brindar el mejor servicio para que encuentres tu hogar ideal.',
+      aboutContent: ''
     }
   }
 }

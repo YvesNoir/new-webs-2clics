@@ -54,6 +54,11 @@ model SiteConfig {
   tiktok          String?
   youtube         String?
 
+  // Configuración página Nosotros
+  aboutTitle      String? @default("Sobre Nosotros")
+  aboutSubtitle   String? @default("Somos una inmobiliaria comprometida con brindar el mejor servicio para que encuentres tu hogar ideal.")
+  aboutContent    String? // Contenido adicional tipo editor de texto
+
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
