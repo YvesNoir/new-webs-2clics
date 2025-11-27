@@ -35,6 +35,9 @@ export interface SiteConfig {
   nosotrosTitle?: string
   nosotrosDescription?: string
   nosotrosContent?: string
+  // Configuración página Tasaciones
+  tasacionesTitle?: string
+  tasacionesDescription?: string
 }
 
 export async function getSiteConfig(): Promise<SiteConfig> {
@@ -69,7 +72,9 @@ export async function getSiteConfig(): Promise<SiteConfig> {
       contactDescription: '¿Tienes alguna pregunta? Estamos aquí para ayudarte. Ponte en contacto con nosotros y te responderemos lo antes posible.',
       nosotrosTitle: 'Sobre Nosotros',
       nosotrosDescription: 'Somos una inmobiliaria comprometida con brindar el mejor servicio para que encuentres tu hogar ideal.',
-      nosotrosContent: ''
+      nosotrosContent: '',
+      tasacionesTitle: 'Tasaciones',
+      tasacionesDescription: 'Obtén una tasación profesional de tu propiedad de forma gratuita.'
     }
   } catch (error) {
     console.error('Error fetching site config:', error)
@@ -102,7 +107,9 @@ export async function getSiteConfig(): Promise<SiteConfig> {
       contactDescription: '¿Tienes alguna pregunta? Estamos aquí para ayudarte. Ponte en contacto con nosotros y te responderemos lo antes posible.',
       nosotrosTitle: 'Sobre Nosotros',
       nosotrosDescription: 'Somos una inmobiliaria comprometida con brindar el mejor servicio para que encuentres tu hogar ideal.',
-      nosotrosContent: ''
+      nosotrosContent: '',
+      tasacionesTitle: 'Tasaciones',
+      tasacionesDescription: 'Obtén una tasación profesional de tu propiedad de forma gratuita.'
     }
   }
 }

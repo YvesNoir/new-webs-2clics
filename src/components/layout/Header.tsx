@@ -64,6 +64,10 @@ export default function Header({ config }: HeaderProps = {}) {
               Nosotros
             </Link>
 
+            <Link href="/tasaciones" className="text-gray-700 hover:text-orange-500 font-medium">
+              Tasaciones
+            </Link>
+
             <Link href="/contacto" className="text-gray-700 hover:text-orange-500 font-medium">
               Contacto
             </Link>
@@ -113,6 +117,9 @@ export default function Header({ config }: HeaderProps = {}) {
               </Link>
               <Link href="/nosotros" className="text-gray-700 hover:text-orange-500 block px-3 py-2 rounded-md text-base font-medium">
                 Nosotros
+              </Link>
+              <Link href="/tasaciones" className="text-gray-700 hover:text-orange-500 block px-3 py-2 rounded-md text-base font-medium">
+                Tasaciones
               </Link>
               <Link href="/contacto" className="text-gray-700 hover:text-orange-500 block px-3 py-2 rounded-md text-base font-medium">
                 Contacto

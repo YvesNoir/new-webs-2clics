@@ -68,6 +68,10 @@ model SiteConfig {
   nosotrosDescription String? @default("Somos una inmobiliaria comprometida con brindar el mejor servicio para que encuentres tu hogar ideal.")
   nosotrosContent String? // Contenido adicional tipo editor de texto
 
+  // Configuración página Tasaciones
+  tasacionesTitle String? @default("Tasaciones")
+  tasacionesDescription String? @default("Obtén una tasación profesional de tu propiedad de forma gratuita.")
+
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
@@ -156,4 +160,23 @@ model Contact {
   updatedAt  DateTime @updatedAt
 
   @@map("contacts")
+}
+
+// Modelo para solicitudes de tasación
+model Tasacion {
+  id                  String   @id @default(cuid())
+  nombre              String
+  telefono            String
+  correo              String
+  contenido           String?
+  direccionPropiedad  String
+  barrio              String
+  tipologiaPropiedad  String   // 'casa', 'departamento', 'ph', etc.
+  operacionPropiedad  String   // 'venta', 'alquiler', 'alquiler-temporal'
+  status              String   @default("new") // 'new', 'in-progress', 'completed', 'cancelled'
+
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  @@map("tasaciones")
 }

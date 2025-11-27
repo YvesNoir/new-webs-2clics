@@ -102,6 +102,11 @@ export default function Footer({ config }: FooterProps = {}) {
                   Nosotros
                 </Link>
               </li>
+              <li>
+                <Link href="/tasaciones" className="text-gray-400 hover:text-white transition-colors">
+                  Tasaciones
+                </Link>
+              </li>
             </ul>
           </div>
 

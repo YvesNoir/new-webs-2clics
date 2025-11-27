@@ -7,7 +7,7 @@ import RichTextEditor from '@/components/admin/RichTextEditor'
 export default function AdminDashboard() {
   const [isLoading, setIsLoading] = useState(true)
   const [isAuthenticated, setIsAuthenticated] = useState(false)
-  const [activeTab, setActiveTab] = useState<'site-config' | 'page-config' | 'contact-config' | 'nosotros-config'>('site-config')
+  const [activeTab, setActiveTab] = useState<'site-config' | 'page-config' | 'contact-config' | 'nosotros-config' | 'tasaciones-config'>('site-config')
   const [isSaving, setIsSaving] = useState(false)
   const [saveMessage, setSaveMessage] = useState('')
   const [isSavingPage, setIsSavingPage] = useState(false)
@@ -16,8 +16,11 @@ export default function AdminDashboard() {
   const [contactSaveMessage, setContactSaveMessage] = useState('')
   const [isSavingNosotros, setIsSavingNosotros] = useState(false)
   const [nosotrosSaveMessage, setNosotrosSaveMessage] = useState('')
+  const [isSavingTasaciones, setIsSavingTasaciones] = useState(false)
+  const [tasacionesSaveMessage, setTasacionesSaveMessage] = useState('')
   const [isUploadingLogo, setIsUploadingLogo] = useState(false)
   const [isUploadingFavicon, setIsUploadingFavicon] = useState(false)
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false)
   const [siteConfig, setSiteConfig] = useState({
     // Información básica
     companyName: '',
@@ -49,6 +52,8 @@ export default function AdminDashboard() {
     contactDescription: '',
     nosotrosTitle: '',
     nosotrosDescription: '',
+    tasacionesTitle: '',
+    tasacionesDescription: '',
 
     // Redes sociales
     facebook: '',
@@ -115,6 +120,8 @@ export default function AdminDashboard() {
           contactDescription: config.contactDescription || '',
           nosotrosTitle: config.nosotrosTitle || '',
           nosotrosDescription: config.nosotrosDescription || '',
+          tasacionesTitle: config.tasacionesTitle || '',
+          tasacionesDescription: config.tasacionesDescription || '',
           facebook: config.facebook || '',
           instagram: config.instagram || '',
           twitter: config.twitter || '',
@@ -267,6 +274,38 @@ export default function AdminDashboard() {
     }
   }
 
+  // Función para guardar configuración de tasaciones
+  const updateTasacionesConfig = async () => {
+    setIsSavingTasaciones(true)
+    setTasacionesSaveMessage('')
+    try {
+      // Guardar configuración completa incluyendo tasacionesTitle y tasacionesDescription
+      const response = await fetch('/api/site-config', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(siteConfig),
+        credentials: 'include'
+      })
+
+      if (response.ok) {
+        setTasacionesSaveMessage('¡Configuración de tasaciones guardada exitosamente!')
+        // Refrescar el preview después de guardar en el servidor
+        refreshPreview()
+        // Limpiar mensaje después de 3 segundos
+        setTimeout(() => setTasacionesSaveMessage(''), 3000)
+      } else {
+        setTasacionesSaveMessage('Error al guardar la configuración de tasaciones')
+      }
+    } catch (error) {
+      console.error('Error updating tasaciones config:', error)
+      setTasacionesSaveMessage('Error al guardar la configuración de tasaciones')
+    } finally {
+      setIsSavingTasaciones(false)
+    }
+  }
+
   // Función para actualizar config sin guardar (solo preview en tiempo real)
   const updateSiteConfigLocal = (newConfig: typeof siteConfig) => {
     setSiteConfig(newConfig)
@@ -352,6 +391,7 @@ export default function AdminDashboard() {
       const baseUrl =
         activeTab === 'contact-config' ? '/contacto' :
         activeTab === 'nosotros-config' ? '/nosotros' :
+        activeTab === 'tasaciones-config' ? '/tasaciones' :
         '/preview'
       iframeRef.current.src = `${baseUrl}?t=${Date.now()}`
     }
@@ -382,6 +422,24 @@ export default function AdminDashboard() {
   useEffect(() => {
     refreshPreview()
   }, [activeTab])
+
+  // Cerrar dropdown al hacer clic fuera
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Element
+      if (!target.closest('.dropdown-container')) {
+        setIsDropdownOpen(false)
+      }
+    }
+
+    if (isDropdownOpen) {
+      document.addEventListener('mousedown', handleClickOutside)
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [isDropdownOpen])
 
   if (isLoading) {
     return (
@@ -415,47 +473,80 @@ export default function AdminDashboard() {
                   Panel de Configuración
                 </h2>
               </div>
-              <div className="bg-gray-100 p-1 rounded-lg">
+              <div className="relative dropdown-container">
                 <button
-                  onClick={() => setActiveTab('site-config')}
-                  className={`w-full py-2 px-3 text-sm font-medium rounded-md transition-colors ${
-                    activeTab === 'site-config'
-                      ? 'bg-white text-gray-900 shadow-sm'
-                      : 'text-gray-600 hover:text-gray-900'
-                  }`}
+                  onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                  className="w-full py-2 px-3 pr-8 text-sm font-medium bg-white border border-gray-300 rounded-md hover:border-orange-500 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors text-left"
                 >
-                  Configuración del Sitio Web
+                  {activeTab === 'site-config' && 'Configuración del Sitio Web'}
+                  {activeTab === 'page-config' && 'Configuración de la Página de Inicio'}
+                  {activeTab === 'contact-config' && 'Configuración de Contacto'}
+                  {activeTab === 'nosotros-config' && 'Configuración de Nosotros'}
+                  {activeTab === 'tasaciones-config' && 'Configuración de Tasaciones'}
+                  <svg className="absolute right-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d={isDropdownOpen ? "M5 15l7-7 7 7" : "M19 9l-7 7-7-7"} />
+                  </svg>
                 </button>
-                <button
-                  onClick={() => setActiveTab('page-config')}
-                  className={`w-full py-2 px-3 text-sm font-medium rounded-md transition-colors mt-1 ${
-                    activeTab === 'page-config'
-                      ? 'bg-white text-gray-900 shadow-sm'
-                      : 'text-gray-600 hover:text-gray-900'
-                  }`}
-                >
-                  Configuración de la Página de Inicio
-                </button>
-                <button
-                  onClick={() => setActiveTab('contact-config')}
-                  className={`w-full py-2 px-3 text-sm font-medium rounded-md transition-colors mt-1 ${
-                    activeTab === 'contact-config'
-                      ? 'bg-white text-gray-900 shadow-sm'
-                      : 'text-gray-600 hover:text-gray-900'
-                  }`}
-                >
-                  Configuración de Contacto
-                </button>
-                <button
-                  onClick={() => setActiveTab('nosotros-config')}
-                  className={`w-full py-2 px-3 text-sm font-medium rounded-md transition-colors mt-1 ${
-                    activeTab === 'nosotros-config'
-                      ? 'bg-white text-gray-900 shadow-sm'
-                      : 'text-gray-600 hover:text-gray-900'
-                  }`}
-                >
-                  Configuración de Nosotros
-                </button>
+
+                {isDropdownOpen && (
+                  <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-300 rounded-md shadow-lg z-10 max-h-60 overflow-y-auto">
+                    <button
+                      onClick={() => { setActiveTab('site-config'); setIsDropdownOpen(false) }}
+                      className={`w-full text-left py-2 px-3 text-sm hover:bg-gray-50 transition-colors ${
+                        activeTab === 'site-config' ? 'bg-orange-50 text-orange-700 font-medium' : 'text-gray-700'
+                      }`}
+                    >
+                      <div className="flex items-center">
+                        <div className="w-2 h-2 bg-blue-500 rounded-full mr-3"></div>
+                        Configuración del Sitio Web
+                      </div>
+                    </button>
+                    <button
+                      onClick={() => { setActiveTab('page-config'); setIsDropdownOpen(false) }}
+                      className={`w-full text-left py-2 px-3 text-sm hover:bg-gray-50 transition-colors ${
+                        activeTab === 'page-config' ? 'bg-orange-50 text-orange-700 font-medium' : 'text-gray-700'
+                      }`}
+                    >
+                      <div className="flex items-center">
+                        <div className="w-2 h-2 bg-green-500 rounded-full mr-3"></div>
+                        Configuración de la Página de Inicio
+                      </div>
+                    </button>
+                    <button
+                      onClick={() => { setActiveTab('contact-config'); setIsDropdownOpen(false) }}
+                      className={`w-full text-left py-2 px-3 text-sm hover:bg-gray-50 transition-colors ${
+                        activeTab === 'contact-config' ? 'bg-orange-50 text-orange-700 font-medium' : 'text-gray-700'
+                      }`}
+                    >
+                      <div className="flex items-center">
+                        <div className="w-2 h-2 bg-purple-500 rounded-full mr-3"></div>
+                        Configuración de Contacto
+                      </div>
+                    </button>
+                    <button
+                      onClick={() => { setActiveTab('nosotros-config'); setIsDropdownOpen(false) }}
+                      className={`w-full text-left py-2 px-3 text-sm hover:bg-gray-50 transition-colors ${
+                        activeTab === 'nosotros-config' ? 'bg-orange-50 text-orange-700 font-medium' : 'text-gray-700'
+                      }`}
+                    >
+                      <div className="flex items-center">
+                        <div className="w-2 h-2 bg-yellow-500 rounded-full mr-3"></div>
+                        Configuración de Nosotros
+                      </div>
+                    </button>
+                    <button
+                      onClick={() => { setActiveTab('tasaciones-config'); setIsDropdownOpen(false) }}
+                      className={`w-full text-left py-2 px-3 text-sm hover:bg-gray-50 transition-colors ${
+                        activeTab === 'tasaciones-config' ? 'bg-orange-50 text-orange-700 font-medium' : 'text-gray-700'
+                      }`}
+                    >
+                      <div className="flex items-center">
+                        <div className="w-2 h-2 bg-red-500 rounded-full mr-3"></div>
+                        Configuración de Tasaciones
+                      </div>
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -1467,6 +1558,78 @@ export default function AdminDashboard() {
                 </div>
               )}
 
+              {activeTab === 'tasaciones-config' && (
+                <div className="space-y-6">
+                  {/* Configuración de la Página de Tasaciones */}
+                  <div>
+                    <h3 className="text-md font-medium text-gray-900 mb-4">
+                      Configuración de la Página de Tasaciones
+                    </h3>
+                    <p className="text-sm text-gray-600 mb-6">
+                      Personaliza el título y descripción que aparecerán en la página de tasaciones.
+                    </p>
+
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Título Principal
+                        </label>
+                        <input
+                          type="text"
+                          placeholder="Tasaciones"
+                          value={siteConfig.tasacionesTitle || ''}
+                          onChange={(e) => updateSiteConfigLocal({ ...siteConfig, tasacionesTitle: e.target.value })}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Descripción
+                        </label>
+                        <textarea
+                          rows={3}
+                          placeholder="Obtén una tasación profesional de tu propiedad de forma gratuita..."
+                          value={siteConfig.tasacionesDescription || ''}
+                          onChange={(e) => updateSiteConfigLocal({ ...siteConfig, tasacionesDescription: e.target.value })}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+
+                  {/* Save Button */}
+                  <div className="pt-6 border-t">
+                    <button
+                      onClick={updateTasacionesConfig}
+                      disabled={isSavingTasaciones}
+                      className="w-full font-medium py-3 px-4 rounded-lg transition-colors bg-orange-500 hover:bg-orange-600 text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {isSavingTasaciones ? (
+                        <div className="flex items-center justify-center">
+                          <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                            <path className="opacity-75" fill="currentColor" d="m4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                          </svg>
+                          <span>Guardando...</span>
+                        </div>
+                      ) : (
+                        'Guardar Configuración de Tasaciones'
+                      )}
+                    </button>
+                    {/* Tasaciones Save Message */}
+                    {tasacionesSaveMessage && (
+                      <div className={`mt-3 text-center text-sm font-medium ${
+                        tasacionesSaveMessage.includes('Error') ? 'text-red-600' : 'text-green-600'
+                      }`}>
+                        {tasacionesSaveMessage}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
             </div>
         </div>
 
@@ -1509,6 +1672,7 @@ export default function AdminDashboard() {
                 src={
                   activeTab === 'contact-config' ? '/contacto' :
                   activeTab === 'nosotros-config' ? '/nosotros' :
+                  activeTab === 'tasaciones-config' ? '/tasaciones' :
                   '/preview'
                 }
                 className="w-full h-[calc(100%-40px)] border-0"
