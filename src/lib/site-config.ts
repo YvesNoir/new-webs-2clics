@@ -18,6 +18,8 @@ export interface SiteConfig {
   secondaryColor: string
   tagColor: string
   heroVariant?: string
+  mapUrl?: string
+  showMap?: boolean
   facebook?: string
   instagram?: string
   twitter?: string
@@ -59,6 +61,8 @@ export async function getSiteConfig(): Promise<SiteConfig> {
       secondaryColor: '#1f2937',
       tagColor: '#10b981',
       heroVariant: 'variant1',
+      mapUrl: '',
+      showMap: true,
       facebook: '',
       instagram: '',
       twitter: '',
@@ -94,6 +98,8 @@ export async function getSiteConfig(): Promise<SiteConfig> {
       secondaryColor: '#1f2937',
       tagColor: '#10b981',
       heroVariant: 'variant1',
+      mapUrl: '',
+      showMap: true,
       facebook: '',
       instagram: '',
       twitter: '',
