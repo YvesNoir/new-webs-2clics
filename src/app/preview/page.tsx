@@ -13,8 +13,8 @@ import PreviewSkeleton from '@/components/PreviewSkeleton'
 export default function PreviewPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [config, setConfig] = useState({
-    companyName: 'Inmobiliaria Homez',
-    siteTitle: 'Inmobiliaria Homez - Propiedades de Calidad',
+    companyName: '',
+    siteTitle: '',
     siteDescription: 'Tu inmobiliaria de confianza, especializada en la venta y alquiler de propiedades',
     logo: '',
     favicon: '',

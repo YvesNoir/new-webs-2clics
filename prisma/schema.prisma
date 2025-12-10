@@ -33,6 +33,11 @@ model SiteConfig {
   primaryColor    String @default("#f97316") // Orange-500
   secondaryColor  String @default("#1f2937") // Gray-800
   tagColor        String @default("#10b981") // Green-500 for tags
+
+  // Footer colors
+  footerBackgroundColor String? @default("#1f2937") // Footer background color
+  footerTextColor       String? @default("#ffffff") // Footer text color
+  footerLogo            String? // Footer logo URL
   phone           String?
   whatsapp        String?
   email           String?

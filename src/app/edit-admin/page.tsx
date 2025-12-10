@@ -7,7 +7,7 @@ import RichTextEditor from '@/components/admin/RichTextEditor'
 export default function AdminDashboard() {
   const [isLoading, setIsLoading] = useState(true)
   const [isAuthenticated, setIsAuthenticated] = useState(false)
-  const [activeTab, setActiveTab] = useState<'site-config' | 'page-config' | 'contact-config' | 'nosotros-config' | 'tasaciones-config'>('site-config')
+  const [activeTab, setActiveTab] = useState<'site-config' | 'page-config' | 'contact-config' | 'nosotros-config' | 'tasaciones-config' | 'footer-config'>('site-config')
   const [isSaving, setIsSaving] = useState(false)
   const [saveMessage, setSaveMessage] = useState('')
   const [isSavingPage, setIsSavingPage] = useState(false)
@@ -18,8 +18,11 @@ export default function AdminDashboard() {
   const [nosotrosSaveMessage, setNosotrosSaveMessage] = useState('')
   const [isSavingTasaciones, setIsSavingTasaciones] = useState(false)
   const [tasacionesSaveMessage, setTasacionesSaveMessage] = useState('')
+  const [isSavingFooter, setIsSavingFooter] = useState(false)
+  const [footerSaveMessage, setFooterSaveMessage] = useState('')
   const [isUploadingLogo, setIsUploadingLogo] = useState(false)
   const [isUploadingFavicon, setIsUploadingFavicon] = useState(false)
+  const [isUploadingFooterLogo, setIsUploadingFooterLogo] = useState(false)
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
   const [siteConfig, setSiteConfig] = useState({
     // Información básica
@@ -42,6 +45,11 @@ export default function AdminDashboard() {
     primaryColor: '#f97316',
     secondaryColor: '#1f2937',
     tagColor: '#10b981',
+
+    // Footer
+    footerBackgroundColor: '#1f2937',
+    footerTextColor: '#ffffff',
+    footerLogo: '',
 
     // Hero Banner
     heroVariant: 'variant1',
@@ -112,6 +120,9 @@ export default function AdminDashboard() {
           primaryColor: config.primaryColor || '#f97316',
           secondaryColor: config.secondaryColor || '#1f2937',
           tagColor: config.tagColor || '#10b981',
+          footerBackgroundColor: config.footerBackgroundColor || '#1f2937',
+          footerTextColor: config.footerTextColor || '#ffffff',
+          footerLogo: config.footerLogo || '',
           heroVariant: config.heroVariant || 'variant1',
           videoUrl: config.videoUrl || '',
           heroTitle: config.heroTitle || '',
@@ -306,6 +317,38 @@ export default function AdminDashboard() {
     }
   }
 
+  // Función para guardar configuración del footer
+  const updateFooterConfig = async () => {
+    setIsSavingFooter(true)
+    setFooterSaveMessage('')
+    try {
+      // Guardar configuración completa incluyendo colores del footer
+      const response = await fetch('/api/site-config', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(siteConfig),
+        credentials: 'include'
+      })
+
+      if (response.ok) {
+        setFooterSaveMessage('¡Configuración del footer guardada exitosamente!')
+        // Refrescar el preview después de guardar en el servidor
+        refreshPreview()
+        // Limpiar mensaje después de 3 segundos
+        setTimeout(() => setFooterSaveMessage(''), 3000)
+      } else {
+        setFooterSaveMessage('Error al guardar la configuración del footer')
+      }
+    } catch (error) {
+      console.error('Error updating footer config:', error)
+      setFooterSaveMessage('Error al guardar la configuración del footer')
+    } finally {
+      setIsSavingFooter(false)
+    }
+  }
+
   // Función para actualizar config sin guardar (solo preview en tiempo real)
   const updateSiteConfigLocal = (newConfig: typeof siteConfig) => {
     setSiteConfig(newConfig)
@@ -320,9 +363,10 @@ export default function AdminDashboard() {
   }
 
   // Función para subir archivos (logo o favicon)
-  const handleFileUpload = async (file: File, type: 'logo' | 'favicon') => {
+  const handleFileUpload = async (file: File, type: 'logo' | 'favicon' | 'footerLogo') => {
     if (type === 'logo') setIsUploadingLogo(true)
     if (type === 'favicon') setIsUploadingFavicon(true)
+    if (type === 'footerLogo') setIsUploadingFooterLogo(true)
 
     try {
       const formData = new FormData()
@@ -347,18 +391,22 @@ export default function AdminDashboard() {
         updateSiteConfigLocal(updatedConfig)
 
         // Mostrar mensaje de éxito
-        setSaveMessage(`${type === 'logo' ? 'Logo' : 'Favicon'} subido exitosamente`)
+        const fileTypeLabel = type === 'logo' ? 'Logo' : type === 'favicon' ? 'Favicon' : 'Logo de Footer'
+        setSaveMessage(`${fileTypeLabel} subido exitosamente`)
         setTimeout(() => setSaveMessage(''), 3000)
       } else {
         const error = await response.json()
-        setSaveMessage(`Error al subir ${type === 'logo' ? 'logo' : 'favicon'}: ${error.error}`)
+        const fileTypeLabel = type === 'logo' ? 'logo' : type === 'favicon' ? 'favicon' : 'logo de footer'
+        setSaveMessage(`Error al subir ${fileTypeLabel}: ${error.error}`)
       }
     } catch (error) {
       console.error(`Error uploading ${type}:`, error)
-      setSaveMessage(`Error al subir ${type === 'logo' ? 'logo' : 'favicon'}`)
+      const fileTypeLabel = type === 'logo' ? 'logo' : type === 'favicon' ? 'favicon' : 'logo de footer'
+      setSaveMessage(`Error al subir ${fileTypeLabel}`)
     } finally {
       if (type === 'logo') setIsUploadingLogo(false)
       if (type === 'favicon') setIsUploadingFavicon(false)
+      if (type === 'footerLogo') setIsUploadingFooterLogo(false)
     }
   }
 
@@ -483,6 +531,7 @@ export default function AdminDashboard() {
                   {activeTab === 'contact-config' && 'Configuración de Contacto'}
                   {activeTab === 'nosotros-config' && 'Configuración de Nosotros'}
                   {activeTab === 'tasaciones-config' && 'Configuración de Tasaciones'}
+                  {activeTab === 'footer-config' && 'Configuración del Footer'}
                   <svg className="absolute right-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d={isDropdownOpen ? "M5 15l7-7 7 7" : "M19 9l-7 7-7-7"} />
                   </svg>
@@ -545,6 +594,17 @@ export default function AdminDashboard() {
                         Configuración de Tasaciones
                       </div>
                     </button>
+                    <button
+                      onClick={() => { setActiveTab('footer-config'); setIsDropdownOpen(false) }}
+                      className={`w-full text-left py-2 px-3 text-sm hover:bg-gray-50 transition-colors ${
+                        activeTab === 'footer-config' ? 'bg-orange-50 text-orange-700 font-medium' : 'text-gray-700'
+                      }`}
+                    >
+                      <div className="flex items-center">
+                        <div className="w-2 h-2 bg-gray-800 rounded-full mr-3"></div>
+                        Configuración del Footer
+                      </div>
+                    </button>
                   </div>
                 )}
               </div>
@@ -559,6 +619,18 @@ export default function AdminDashboard() {
                       Información Básica
                     </h3>
                     <div className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Nombre de la Inmobiliaria
+                        </label>
+                        <input
+                          type="text"
+                          value={siteConfig.companyName}
+                          onChange={(e) => updateSiteConfigLocal({ ...siteConfig, companyName: e.target.value })}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-orange-500 focus:border-orange-500"
+                          placeholder="Ej: Inmobiliaria Homez"
+                        />
+                      </div>
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
                           Título del Sitio
@@ -1624,6 +1696,176 @@ export default function AdminDashboard() {
                         tasacionesSaveMessage.includes('Error') ? 'text-red-600' : 'text-green-600'
                       }`}>
                         {tasacionesSaveMessage}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {activeTab === 'footer-config' && (
+                <div className="space-y-6">
+                  {/* Configuración del Footer */}
+                  <div>
+                    <h3 className="text-md font-medium text-gray-900 mb-4">
+                      Configuración del Footer
+                    </h3>
+                    <p className="text-sm text-gray-600 mb-6">
+                      Personaliza el logo y colores del footer de tu sitio web.
+                    </p>
+
+                    <div className="space-y-6">
+                      {/* Logo del Footer */}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Logo del Footer
+                        </label>
+                        <div className="space-y-3">
+                          {siteConfig.footerLogo && (
+                            <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
+                              <img
+                                src={siteConfig.footerLogo}
+                                alt="Logo footer actual"
+                                className="w-12 h-12 object-contain rounded"
+                              />
+                              <div className="flex-1">
+                                <p className="text-sm text-gray-600">Logo footer actual</p>
+                                <p className="text-xs text-gray-400">{siteConfig.footerLogo}</p>
+                              </div>
+                            </div>
+                          )}
+                          <div className="relative">
+                            <input
+                              type="file"
+                              accept="image/jpeg,image/jpg,image/png,image/svg+xml,image/webp"
+                              onChange={(e) => {
+                                const file = e.target.files?.[0]
+                                if (file) {
+                                  handleFileUpload(file, 'footerLogo')
+                                }
+                              }}
+                              disabled={isUploadingFooterLogo}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-orange-500 focus:border-orange-500 disabled:opacity-50"
+                            />
+                            {isUploadingFooterLogo && (
+                              <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-orange-500"></div>
+                              </div>
+                            )}
+                          </div>
+                          <p className="text-xs text-gray-500">
+                            Formatos: JPG, PNG, SVG, WebP. Tamaño recomendado: 120x40px
+                          </p>
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Color de Fondo del Footer
+                        </label>
+                        <div className="flex items-center space-x-3">
+                          <input
+                            type="color"
+                            value={siteConfig.footerBackgroundColor}
+                            onChange={(e) => updateSiteConfigLocal({ ...siteConfig, footerBackgroundColor: e.target.value })}
+                            className="w-12 h-12 border border-gray-300 rounded-md cursor-pointer"
+                          />
+                          <input
+                            type="text"
+                            value={siteConfig.footerBackgroundColor}
+                            onChange={(e) => updateSiteConfigLocal({ ...siteConfig, footerBackgroundColor: e.target.value })}
+                            className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:ring-orange-500 focus:border-orange-500"
+                            placeholder="#1f2937"
+                          />
+                        </div>
+                        <p className="text-xs text-gray-500 mt-1">
+                          Selecciona el color de fondo del footer
+                        </p>
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Color del Texto del Footer
+                        </label>
+                        <div className="flex items-center space-x-3">
+                          <input
+                            type="color"
+                            value={siteConfig.footerTextColor}
+                            onChange={(e) => updateSiteConfigLocal({ ...siteConfig, footerTextColor: e.target.value })}
+                            className="w-12 h-12 border border-gray-300 rounded-md cursor-pointer"
+                          />
+                          <input
+                            type="text"
+                            value={siteConfig.footerTextColor}
+                            onChange={(e) => updateSiteConfigLocal({ ...siteConfig, footerTextColor: e.target.value })}
+                            className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:ring-orange-500 focus:border-orange-500"
+                            placeholder="#ffffff"
+                          />
+                        </div>
+                        <p className="text-xs text-gray-500 mt-1">
+                          Selecciona el color del texto del footer
+                        </p>
+                      </div>
+
+                      {/* Vista Previa del Footer */}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-3">
+                          Vista Previa
+                        </label>
+                        <div
+                          className="p-4 rounded-lg border-2 border-dashed border-gray-300"
+                          style={{
+                            backgroundColor: siteConfig.footerBackgroundColor,
+                            color: siteConfig.footerTextColor
+                          }}
+                        >
+                          <div className="text-center">
+                            {/* Logo del Footer en Preview */}
+                            {siteConfig.footerLogo && (
+                              <div className="mb-3">
+                                <img
+                                  src={siteConfig.footerLogo}
+                                  alt="Logo Footer"
+                                  className="h-8 mx-auto object-contain"
+                                />
+                              </div>
+                            )}
+                            <h4 className="font-semibold mb-2">{siteConfig.companyName || 'Tu Inmobiliaria'}</h4>
+                            <p className="text-sm opacity-80">
+                              © 2025 {siteConfig.companyName || 'Tu Inmobiliaria'} - Todos los derechos reservados.
+                            </p>
+                            <div className="mt-2 text-xs opacity-60">
+                              Enlaces • Política de Privacidad • Términos de Uso
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Save Button */}
+                  <div className="pt-6 border-t">
+                    <button
+                      onClick={updateFooterConfig}
+                      disabled={isSavingFooter}
+                      className="w-full font-medium py-3 px-4 rounded-lg transition-colors bg-orange-500 hover:bg-orange-600 text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {isSavingFooter ? (
+                        <div className="flex items-center justify-center">
+                          <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                            <path className="opacity-75" fill="currentColor" d="m4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                          </svg>
+                          <span>Guardando...</span>
+                        </div>
+                      ) : (
+                        'Guardar Configuración del Footer'
+                      )}
+                    </button>
+                    {/* Footer Save Message */}
+                    {footerSaveMessage && (
+                      <div className={`mt-3 text-center text-sm font-medium ${
+                        footerSaveMessage.includes('Error') ? 'text-red-600' : 'text-green-600'
+                      }`}>
+                        {footerSaveMessage}
                       </div>
                     )}
                   </div>

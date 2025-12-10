@@ -11,7 +11,7 @@ export async function GET() {
     if (!siteConfig) {
       siteConfig = await prisma.siteConfig.create({
         data: {
-          companyName: 'Inmobiliaria Homez',
+          companyName: 'Mi Inmobiliaria',
           primaryColor: '#f97316'
         }
       })

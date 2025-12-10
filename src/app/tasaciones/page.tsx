@@ -8,8 +8,8 @@ import DynamicFavicon from '@/components/DynamicFavicon'
 
 export default function TasacionesPage() {
   const [config, setConfig] = useState({
-    companyName: 'Inmobiliaria Homez',
-    siteTitle: 'Inmobiliaria Homez - Propiedades de Calidad',
+    companyName: '',
+    siteTitle: '',
     siteDescription: 'Tu inmobiliaria de confianza, especializada en la venta y alquiler de propiedades',
     logo: '',
     favicon: '',

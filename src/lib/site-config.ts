@@ -17,6 +17,9 @@ export interface SiteConfig {
   primaryColor: string
   secondaryColor: string
   tagColor: string
+  footerBackgroundColor?: string
+  footerTextColor?: string
+  footerLogo?: string
   heroVariant?: string
   mapUrl?: string
   showMap?: boolean
@@ -60,6 +63,9 @@ export async function getSiteConfig(): Promise<SiteConfig> {
       primaryColor: '#f97316',
       secondaryColor: '#1f2937',
       tagColor: '#10b981',
+      footerBackgroundColor: '#1f2937',
+      footerTextColor: '#ffffff',
+      footerLogo: '',
       heroVariant: 'variant1',
       mapUrl: '',
       showMap: true,
@@ -97,6 +103,9 @@ export async function getSiteConfig(): Promise<SiteConfig> {
       primaryColor: '#f97316',
       secondaryColor: '#1f2937',
       tagColor: '#10b981',
+      footerBackgroundColor: '#1f2937',
+      footerTextColor: '#ffffff',
+      footerLogo: '',
       heroVariant: 'variant1',
       mapUrl: '',
       showMap: true,
