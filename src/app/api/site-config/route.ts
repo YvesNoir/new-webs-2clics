@@ -11,8 +11,44 @@ export async function GET() {
     if (!config) {
       const defaultConfig = await prisma.siteConfig.create({
         data: {
-          companyName: 'Inmobiliaria Homez',
-          primaryColor: '#f97316'
+          companyName: 'Mi Inmobiliaria',
+          siteTitle: 'Mi Inmobiliaria - Propiedades de Calidad',
+          siteDescription: 'Tu inmobiliaria de confianza, especializada en la venta y alquiler de propiedades',
+          logo: '',
+          favicon: '',
+          address: '',
+          schedule: '',
+          mapUrl: '',
+          showMap: true,
+          phone: '',
+          whatsapp: '',
+          email: '',
+          primaryColor: '#f97316',
+          secondaryColor: '#1f2937',
+          tagColor: '#10b981',
+          footerBackgroundColor: '#1f2937',
+          footerTextColor: '#ffffff',
+          footerLogo: '',
+          heroVariant: 'variant1',
+          videoUrl: '',
+          heroTitle: '',
+          heroSubtitle: '',
+          facebook: '',
+          instagram: '',
+          twitter: '',
+          linkedin: '',
+          tiktok: '',
+          youtube: '',
+          aboutTitle: 'Sobre Nosotros',
+          aboutSubtitle: 'Somos una inmobiliaria comprometida con brindar el mejor servicio para que encuentres tu hogar ideal.',
+          aboutContent: '',
+          contactTitle: 'Contacto',
+          contactDescription: '¿Tienes alguna pregunta? Estamos aquí para ayudarte. Ponte en contacto con nosotros y te responderemos lo antes posible.',
+          nosotrosTitle: 'Sobre Nosotros',
+          nosotrosDescription: 'Somos una inmobiliaria comprometida con brindar el mejor servicio para que encuentres tu hogar ideal.',
+          nosotrosContent: '',
+          tasacionesTitle: 'Tasaciones',
+          tasacionesDescription: 'Obtén una tasación profesional de tu propiedad de forma gratuita.'
         }
       })
       return NextResponse.json(defaultConfig)
@@ -41,17 +77,99 @@ export async function PUT(request: NextRequest) {
 
     const data = await request.json()
 
-    const config = await prisma.siteConfig.upsert({
-      where: { id: 1 },
-      update: {
-        companyName: data.companyName,
-        primaryColor: data.primaryColor
-      },
-      create: {
-        companyName: data.companyName,
-        primaryColor: data.primaryColor
-      }
-    })
+    // Primero intentamos encontrar la configuración existente
+    let config = await prisma.siteConfig.findFirst()
+
+    if (config) {
+      // Si existe, la actualizamos
+      config = await prisma.siteConfig.update({
+        where: { id: config.id },
+        data: {
+          companyName: data.companyName,
+          siteTitle: data.siteTitle,
+          siteDescription: data.siteDescription,
+          logo: data.logo,
+          favicon: data.favicon,
+          address: data.address,
+          schedule: data.schedule,
+          mapUrl: data.mapUrl,
+          showMap: data.showMap,
+          phone: data.phone,
+          whatsapp: data.whatsapp,
+          email: data.email,
+          primaryColor: data.primaryColor,
+          secondaryColor: data.secondaryColor,
+          tagColor: data.tagColor,
+          footerBackgroundColor: data.footerBackgroundColor,
+          footerTextColor: data.footerTextColor,
+          footerLogo: data.footerLogo,
+          heroVariant: data.heroVariant,
+          videoUrl: data.videoUrl,
+          heroTitle: data.heroTitle,
+          heroSubtitle: data.heroSubtitle,
+          facebook: data.facebook,
+          instagram: data.instagram,
+          twitter: data.twitter,
+          linkedin: data.linkedin,
+          tiktok: data.tiktok,
+          youtube: data.youtube,
+          aboutTitle: data.aboutTitle,
+          aboutSubtitle: data.aboutSubtitle,
+          aboutContent: data.aboutContent,
+          contactTitle: data.contactTitle,
+          contactDescription: data.contactDescription,
+          nosotrosTitle: data.nosotrosTitle,
+          nosotrosDescription: data.nosotrosDescription,
+          nosotrosContent: data.nosotrosContent,
+          tasacionesTitle: data.tasacionesTitle,
+          tasacionesDescription: data.tasacionesDescription
+        }
+      })
+    } else {
+      // Si no existe, la creamos
+      config = await prisma.siteConfig.create({
+        data: {
+          companyName: data.companyName,
+          siteTitle: data.siteTitle,
+          siteDescription: data.siteDescription,
+          logo: data.logo,
+          favicon: data.favicon,
+          address: data.address,
+          schedule: data.schedule,
+          mapUrl: data.mapUrl,
+          showMap: data.showMap,
+          phone: data.phone,
+          whatsapp: data.whatsapp,
+          email: data.email,
+          primaryColor: data.primaryColor,
+          secondaryColor: data.secondaryColor,
+          tagColor: data.tagColor,
+          footerBackgroundColor: data.footerBackgroundColor,
+          footerTextColor: data.footerTextColor,
+          footerLogo: data.footerLogo,
+          heroVariant: data.heroVariant,
+          videoUrl: data.videoUrl,
+          heroTitle: data.heroTitle,
+          heroSubtitle: data.heroSubtitle,
+          facebook: data.facebook,
+          instagram: data.instagram,
+          twitter: data.twitter,
+          linkedin: data.linkedin,
+          tiktok: data.tiktok,
+          youtube: data.youtube,
+          aboutTitle: data.aboutTitle,
+          aboutSubtitle: data.aboutSubtitle,
+          aboutContent: data.aboutContent,
+          contactTitle: data.contactTitle,
+          contactDescription: data.contactDescription,
+          nosotrosTitle: data.nosotrosTitle,
+          nosotrosDescription: data.nosotrosDescription,
+          nosotrosContent: data.nosotrosContent,
+          tasacionesTitle: data.tasacionesTitle,
+          tasacionesDescription: data.tasacionesDescription
+        }
+      })
+    }
 
     return NextResponse.json(config)
   } catch (error) {

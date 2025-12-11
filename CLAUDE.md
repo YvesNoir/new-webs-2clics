@@ -101,3 +101,81 @@ npm run typecheck    # Verificación TypeScript
 5. Implementar autenticación básica
 6. Desarrollar primer bloque (Hero Banner)
 7. Crear panel admin básico
+
+# IMPORTANTE - IDIOMA
+SIEMPRE responde en CASTELLANO/ESPAÑOL.
+NUNCA respondas en inglés, sin importar el contexto o la pregunta.
+Todas las respuestas, explicaciones, comentarios y comunicación debe ser en castellano.
+Los nombres de variables, funciones y archivos pueden seguir convenciones en inglés, pero toda explicación debe ser en castellano.
+
+# GIT Y COMMITS - SEGUIMIENTO DE CAMBIOS
+
+## Mensajes de Commit Descriptivos
+SIEMPRE crear commits con mensajes descriptivos que expliquen:
+- QUÉ se hizo (feat/fix/refactor/etc)
+- POR QUÉ se hizo
+- QUÉ archivos principales se modificaron
+- Estado final del feature/cambio
+
+Formato recomendado:
+```
+tipo: descripción breve - contexto
+
+- Lista detallada de cambios principales
+- Estado actual de funcionalidades
+- Notas importantes sobre el código
+
+🤖 Generated with [Claude Code](https://claude.ai/code)
+
+Co-Authored-By: Claude <noreply@anthropic.com>
+```
+
+## Historial de Commits Importantes
+Para mantenerme al tanto, estos son los commits más relevantes:
+
+**Commit 938ba4d (27nov - actual):**
+- Rollback completo de configuración nosotros
+- Página /nosotros con contenido estático
+- Campos DB para about (aboutTitle, aboutSubtitle, aboutContent) sin usar
+- Header corregido (Inicio y Nosotros como links directos)
+- Admin panel limpio sin configuración nosotros
+
+**Commit e4811ff (anterior):**
+- Mejoras UX en galería de propiedades y filtros
+- Sistema de filtrado mejorado
+
+**Commit 01f0f1a (anterior):**
+- Implementación completa sitio inmobiliario con integración redes sociales
+- Panel admin funcional
+
+## Estado Actual del Proyecto
+- Base funcional: ✅ Funcionando
+- API externa: ✅ Conectada y funcionando (api.2clics.com.ar)
+- Base de datos: ✅ PostgreSQL (Hostinger VPS) - Migrado desde SQLite
+- Panel admin: ✅ Funcional con configuración básica
+- Páginas públicas: ✅ Home, propiedades, nosotros
+- Página nosotros: ✅ Estática, sin configuración admin
+- Deploy: 🔄 Listo para Vercel
+
+## Configuración de Seguridad
+**NEXTAUTH_SECRET:** `cJSJcexJu6f8KCAneBaQa2kPQerAmYixz15bIybyIYg=`
+⚠️ Esta clave debe mantenerse secreta y no compartirse públicamente
+
+## Variables de Entorno para Deploy
+```
+DATABASE_URL="postgresql://app_new2clics:New2clics7211.@72.60.240.4:5432/db_new2clics?schema=new2clics_schema&sslmode=require"
+NEXTAUTH_SECRET="cJSJcexJu6f8KCAneBaQa2kPQerAmYixz15bIybyIYg="
+NEXTAUTH_URL="https://tu-dominio-vercel.vercel.app"
+```
+
+## Próxima Sesión - Contexto
+Al iniciar próxima sesión, revisar:
+1. `git log --oneline -10` para ver últimos commits
+2. Estado actual de funcionalidades desarrolladas
+3. Cualquier trabajo pendiente mencionado en commits
+
+# important-instruction-reminders
+Do what has been asked; nothing more, nothing less.
+NEVER create files unless they're absolutely necessary for achieving your goal.
+ALWAYS prefer editing an existing file to creating a new one.
+NEVER proactively create documentation files (*.md) or README files. Only create documentation files if explicitly requested by the User.

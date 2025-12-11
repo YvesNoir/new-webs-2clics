@@ -6,7 +6,7 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
@@ -24,27 +24,64 @@ model Admin {
 
 // Modelo para la configuración del sitio
 model SiteConfig {
-  id            String @id @default(cuid())
-  companyName   String
-  logo          String?
-  primaryColor  String @default("#f97316") // Orange-500
-  secondaryColor String @default("#64748b") // Gray-500
-  phone         String?
-  email         String?
-  address       String?
-  description   String?
+  id              String @id @default(cuid())
+  companyName     String
+  siteTitle       String?
+  siteDescription String?
+  logo            String?
+  favicon         String?
+  primaryColor    String @default("#f97316") // Orange-500
+  secondaryColor  String @default("#1f2937") // Gray-800
+  tagColor        String @default("#10b981") // Green-500 for tags
+
+  // Footer colors
+  footerBackgroundColor String? @default("#1f2937") // Footer background color
+  footerTextColor       String? @default("#ffffff") // Footer text color
+  footerLogo            String? // Footer logo URL
+  phone           String?
+  whatsapp        String?
+  email           String?
+  address         String?
+  schedule        String?
+  description     String?
+  mapUrl          String?
+  showMap         Boolean @default(true)
+  heroVariant     String @default("variant1") // 'variant1', 'variant2', 'variant3', 'variant4'
+  videoUrl        String? // YouTube video URL for variant4
+  heroTitle       String? // Custom hero title
+  heroSubtitle    String? // Custom hero subtitle
 
   // Redes sociales
-  facebook      String?
-  instagram     String?
-  twitter       String?
-  linkedin      String?
+  facebook        String?
+  instagram       String?
+  twitter         String?
+  linkedin        String?
+  tiktok          String?
+  youtube         String?
 
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  // Configuración página Nosotros
+  aboutTitle      String? @default("Sobre Nosotros")
+  aboutSubtitle   String? @default("Somos una inmobiliaria comprometida con brindar el mejor servicio para que encuentres tu hogar ideal.")
+  aboutContent    String?
+
+  // Configuración página Contacto
+  contactTitle    String? @default("Contacto")
+  contactDescription String? @default("¿Tienes alguna pregunta? Estamos aquí para ayudarte. Ponte en contacto con nosotros y te responderemos lo antes posible.")
+
+  // Configuración página Nosotros
+  nosotrosTitle   String? @default("Sobre Nosotros")
+  nosotrosDescription String? @default("Somos una inmobiliaria comprometida con brindar el mejor servicio para que encuentres tu hogar ideal.")
+  nosotrosContent String? // Contenido adicional tipo editor de texto
+
+  // Configuración página Tasaciones
+  tasacionesTitle String? @default("Tasaciones")
+  tasacionesDescription String? @default("Obtén una tasación profesional de tu propiedad de forma gratuita.")
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
   // Relación con los bloques
-  blocks        SiteBlock[]
+  blocks          SiteBlock[]
 
   @@map("site_configs")
 }
@@ -128,4 +165,23 @@ model Contact {
   updatedAt  DateTime @updatedAt
 
   @@map("contacts")
+}
+
+// Modelo para solicitudes de tasación
+model Tasacion {
+  id                  String   @id @default(cuid())
+  nombre              String
+  telefono            String
+  correo              String
+  contenido           String?
+  direccionPropiedad  String
+  barrio              String
+  tipologiaPropiedad  String   // 'casa', 'departamento', 'ph', etc.
+  operacionPropiedad  String   // 'venta', 'alquiler', 'alquiler-temporal'
+  status              String   @default("new") // 'new', 'in-progress', 'completed', 'cancelled'
+
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  @@map("tasaciones")
 }

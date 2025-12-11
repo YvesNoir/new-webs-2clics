@@ -4,13 +4,17 @@ import { useEffect } from 'react'
 
 interface DynamicStylesProps {
   primaryColor: string
+  secondaryColor?: string
 }
 
-export default function DynamicStyles({ primaryColor }: DynamicStylesProps) {
+export default function DynamicStyles({ primaryColor, secondaryColor }: DynamicStylesProps) {
   useEffect(() => {
     // Create or update CSS custom properties
     const root = document.documentElement
     root.style.setProperty('--primary-color', primaryColor)
+    if (secondaryColor) {
+      root.style.setProperty('--secondary-color', secondaryColor)
+    }
 
     // Update existing orange classes with new color
     const styleElement = document.getElementById('dynamic-styles')
@@ -42,7 +46,7 @@ export default function DynamicStyles({ primaryColor }: DynamicStylesProps) {
     `
 
     document.head.appendChild(newStyleElement)
-  }, [primaryColor])
+  }, [primaryColor, secondaryColor])
 
   return null
 }
