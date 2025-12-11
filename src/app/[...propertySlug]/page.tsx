@@ -6,6 +6,7 @@ import DynamicStyles from '@/components/DynamicStyles'
 import DynamicFavicon from '@/components/DynamicFavicon'
 import { Metadata } from 'next'
 import { notFound } from 'next/navigation'
+import { Suspense } from 'react'
 
 interface PageProps {
   params: Promise<{
@@ -135,7 +136,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const resolvedParams = await params
   const parsed = parsePropertySlug(resolvedParams.propertySlug)
 
-  if (!parsed) {
+  if (!parsed || !parsed.title) {
     return {
       title: `Página no encontrada | ${config.companyName}`,
     }
@@ -174,18 +175,22 @@ export default async function DynamicPropertyPage({ params }: PageProps) {
 
   return (
     <>
-      <DynamicStyles config={config} />
-      <DynamicFavicon config={config} />
+      <DynamicStyles primaryColor={config.primaryColor} />
+      <DynamicFavicon faviconUrl={config.favicon} />
       <Header config={config} />
       <main>
-        <PropertiesClientComponent
-          pageTitle={parsed.title}
-          initialFilters={{
-            ...(parsed.propertyType && { property_type: [parsed.propertyType] }),
-            ...(parsed.operation && { operation_type: [parsed.operation] }),
-            ...(parsed.location && { location: parsed.location })
-          }}
-        />
+        <Suspense fallback={<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="text-center">Cargando propiedades...</div>
+        </div>}>
+          <PropertiesClientComponent
+            pageTitle={parsed.title}
+            initialFilters={{
+              ...(parsed.propertyType && { property_type: [parsed.propertyType] }),
+              ...(parsed.operation && { operation_type: [parsed.operation] }),
+              ...(parsed.location && { location: parsed.location })
+            }}
+          />
+        </Suspense>
       </main>
       <Footer config={config} />
     </>

@@ -4,6 +4,17 @@ import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import RichTextEditor from '@/components/admin/RichTextEditor'
 
+interface SiteBlock {
+  id: string
+  type: string
+  position: number
+  visible: boolean
+  config: string
+  siteConfigId: string
+  createdAt: string
+  updatedAt: string
+}
+
 export default function AdminDashboard() {
   const [isLoading, setIsLoading] = useState(true)
   const [isAuthenticated, setIsAuthenticated] = useState(false)
@@ -60,6 +71,7 @@ export default function AdminDashboard() {
     contactDescription: '',
     nosotrosTitle: '',
     nosotrosDescription: '',
+    nosotrosContent: '',
     tasacionesTitle: '',
     tasacionesDescription: '',
 
@@ -67,9 +79,11 @@ export default function AdminDashboard() {
     facebook: '',
     instagram: '',
     twitter: '',
-    linkedin: ''
+    linkedin: '',
+    tiktok: '',
+    youtube: ''
   })
-  const [siteBlocks, setSiteBlocks] = useState([])
+  const [siteBlocks, setSiteBlocks] = useState<SiteBlock[]>([])
   const iframeRef = useRef<HTMLIFrameElement>(null)
   const router = useRouter()
 
@@ -131,6 +145,7 @@ export default function AdminDashboard() {
           contactDescription: config.contactDescription || '',
           nosotrosTitle: config.nosotrosTitle || '',
           nosotrosDescription: config.nosotrosDescription || '',
+          nosotrosContent: config.nosotrosContent || '',
           tasacionesTitle: config.tasacionesTitle || '',
           tasacionesDescription: config.tasacionesDescription || '',
           facebook: config.facebook || '',
@@ -423,7 +438,7 @@ export default function AdminDashboard() {
 
       if (response.ok) {
         setSiteBlocks(prev =>
-          prev.map((block: any) =>
+          prev.map((block: SiteBlock) =>
             block.id === blockId ? { ...block, visible } : block
           )
         )

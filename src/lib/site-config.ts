@@ -21,6 +21,9 @@ export interface SiteConfig {
   footerTextColor?: string
   footerLogo?: string
   heroVariant?: string
+  videoUrl?: string
+  heroTitle?: string
+  heroSubtitle?: string
   mapUrl?: string
   showMap?: boolean
   facebook?: string
@@ -49,7 +52,48 @@ export async function getSiteConfig(): Promise<SiteConfig> {
   try {
     const config = await prisma.siteConfig.findFirst()
 
-    return config || {
+    if (config) {
+      // Convert null values to undefined to match SiteConfig interface
+      return {
+        ...config,
+        siteTitle: config.siteTitle ?? undefined,
+        siteDescription: config.siteDescription ?? undefined,
+        logo: config.logo ?? undefined,
+        favicon: config.favicon ?? undefined,
+        address: config.address ?? undefined,
+        schedule: config.schedule ?? undefined,
+        phone: config.phone ?? undefined,
+        whatsapp: config.whatsapp ?? undefined,
+        email: config.email ?? undefined,
+        footerBackgroundColor: config.footerBackgroundColor ?? undefined,
+        footerTextColor: config.footerTextColor ?? undefined,
+        footerLogo: config.footerLogo ?? undefined,
+        heroVariant: config.heroVariant ?? undefined,
+        mapUrl: config.mapUrl ?? undefined,
+        showMap: config.showMap ?? undefined,
+        facebook: config.facebook ?? undefined,
+        instagram: config.instagram ?? undefined,
+        twitter: config.twitter ?? undefined,
+        linkedin: config.linkedin ?? undefined,
+        tiktok: config.tiktok ?? undefined,
+        youtube: config.youtube ?? undefined,
+        aboutTitle: config.aboutTitle ?? undefined,
+        aboutSubtitle: config.aboutSubtitle ?? undefined,
+        aboutContent: config.aboutContent ?? undefined,
+        contactTitle: config.contactTitle ?? undefined,
+        contactDescription: config.contactDescription ?? undefined,
+        nosotrosTitle: config.nosotrosTitle ?? undefined,
+        nosotrosDescription: config.nosotrosDescription ?? undefined,
+        nosotrosContent: config.nosotrosContent ?? undefined,
+        tasacionesTitle: config.tasacionesTitle ?? undefined,
+        tasacionesDescription: config.tasacionesDescription ?? undefined,
+        videoUrl: config.videoUrl ?? undefined,
+        heroTitle: config.heroTitle ?? undefined,
+        heroSubtitle: config.heroSubtitle ?? undefined
+      }
+    }
+
+    return {
       companyName: 'Inmobiliaria Homez',
       siteTitle: 'Inmobiliaria Homez - Propiedades de Calidad',
       siteDescription: 'Tu inmobiliaria de confianza, especializada en la venta y alquiler de propiedades',
@@ -67,6 +111,9 @@ export async function getSiteConfig(): Promise<SiteConfig> {
       footerTextColor: '#ffffff',
       footerLogo: '',
       heroVariant: 'variant1',
+      videoUrl: '',
+      heroTitle: '',
+      heroSubtitle: '',
       mapUrl: '',
       showMap: true,
       facebook: '',
@@ -107,6 +154,9 @@ export async function getSiteConfig(): Promise<SiteConfig> {
       footerTextColor: '#ffffff',
       footerLogo: '',
       heroVariant: 'variant1',
+      videoUrl: '',
+      heroTitle: '',
+      heroSubtitle: '',
       mapUrl: '',
       showMap: true,
       facebook: '',

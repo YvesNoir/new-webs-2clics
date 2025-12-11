@@ -15,6 +15,9 @@ yarn-error.log*
 .env.test.local
 .env.production.local
 
+# Security - sensitive configuration files
+CLAUDE.md
+
 # Next.js
 /.next/
 /out/

@@ -25,6 +25,7 @@ export default function PreviewPage() {
     email: '',
     primaryColor: '#f97316',
     secondaryColor: '#1f2937',
+    tagColor: '#10b981',
     heroVariant: 'variant1'
   })
   const [blocks, setBlocks] = useState([])

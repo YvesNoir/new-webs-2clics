@@ -2,13 +2,13 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { useSearchParams, useRouter, usePathname } from 'next/navigation'
-import { fetchProperties, PropertyFilters, PropertyResponse } from '@/lib/properties-api'
+import { fetchProperties, PropertyFilters as PropertyFiltersType, PropertyResponse } from '@/lib/properties-api'
 import PropertyCard from '@/components/PropertyCard'
 import PropertyFilters from '@/components/PropertyFilters'
 
 interface PropertiesClientComponentProps {
   pageTitle?: string
-  initialFilters?: PropertyFilters
+  initialFilters?: PropertyFiltersType
 }
 
 export default function PropertiesClientComponent({ pageTitle, initialFilters }: PropertiesClientComponentProps = {}) {
@@ -18,14 +18,14 @@ export default function PropertiesClientComponent({ pageTitle, initialFilters }:
   const [properties, setProperties] = useState<PropertyResponse | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [filters, setFilters] = useState<PropertyFilters>({})
+  const [filters, setFilters] = useState<PropertyFiltersType>({})
   const [currentPage, setCurrentPage] = useState(1)
   const [config, setConfig] = useState<any>(null)
 
   const propertiesPerPage = 12
 
   // Function to update URL with current filters
-  const updateURLWithFilters = useCallback((newFilters: PropertyFilters) => {
+  const updateURLWithFilters = useCallback((newFilters: PropertyFiltersType) => {
     const params = new URLSearchParams()
 
     if (newFilters.property_type?.[0]) params.set('tipo', newFilters.property_type[0])
@@ -52,7 +52,7 @@ export default function PropertiesClientComponent({ pageTitle, initialFilters }:
 
   // Initialize filters from URL query params and initialFilters
   useEffect(() => {
-    const combinedFilters: PropertyFilters = { ...initialFilters }
+    const combinedFilters: PropertyFiltersType = { ...initialFilters }
 
     // Read URL parameters and convert them to filters (URL params take priority)
     const tipo = searchParams.get('tipo')
@@ -74,7 +74,7 @@ export default function PropertiesClientComponent({ pageTitle, initialFilters }:
         'USD': 'U$D',
         'ARS': 'AR$'
       }
-      combinedFilters.currency = currencyMap[moneda] || moneda
+      combinedFilters.currency = (currencyMap[moneda] || moneda) as "U$D" | "AR$"
     }
 
     setFilters(combinedFilters)
@@ -126,7 +126,7 @@ export default function PropertiesClientComponent({ pageTitle, initialFilters }:
   }, [filters, currentPage])
 
 
-  const handleFiltersChange = (newFilters: PropertyFilters) => {
+  const handleFiltersChange = (newFilters: PropertyFiltersType) => {
     setFilters(newFilters)
     setCurrentPage(1) // Reset to first page when filters change
     // Update URL with query parameters

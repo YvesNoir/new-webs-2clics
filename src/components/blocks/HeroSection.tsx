@@ -9,7 +9,11 @@ interface HeroSectionProps {
   config?: {
     companyName: string
     primaryColor: string
+    secondaryColor: string
     heroVariant?: string
+    videoUrl?: string
+    heroTitle?: string
+    heroSubtitle?: string
   }
 }
 

@@ -22,6 +22,7 @@ export default function NosotrosPage() {
     secondaryColor: '#1f2937',
     nosotrosTitle: 'Sobre Nosotros',
     nosotrosDescription: 'Somos una inmobiliaria comprometida con brindar el mejor servicio para que encuentres tu hogar ideal.',
+    nosotrosContent: '',
     facebook: '',
     instagram: '',
     twitter: '',

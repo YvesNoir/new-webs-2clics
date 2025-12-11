@@ -151,9 +151,22 @@ Para mantenerme al tanto, estos son los commits más relevantes:
 ## Estado Actual del Proyecto
 - Base funcional: ✅ Funcionando
 - API externa: ✅ Conectada y funcionando (api.2clics.com.ar)
+- Base de datos: ✅ PostgreSQL (Hostinger VPS) - Migrado desde SQLite
 - Panel admin: ✅ Funcional con configuración básica
 - Páginas públicas: ✅ Home, propiedades, nosotros
 - Página nosotros: ✅ Estática, sin configuración admin
+- Deploy: 🔄 Listo para Vercel
+
+## Configuración de Seguridad
+**NEXTAUTH_SECRET:** `cJSJcexJu6f8KCAneBaQa2kPQerAmYixz15bIybyIYg=`
+⚠️ Esta clave debe mantenerse secreta y no compartirse públicamente
+
+## Variables de Entorno para Deploy
+```
+DATABASE_URL="postgresql://app_new2clics:New2clics7211.@72.60.240.4:5432/db_new2clics?schema=new2clics_schema&sslmode=require"
+NEXTAUTH_SECRET="cJSJcexJu6f8KCAneBaQa2kPQerAmYixz15bIybyIYg="
+NEXTAUTH_URL="https://tu-dominio-vercel.vercel.app"
+```
 
 ## Próxima Sesión - Contexto
 Al iniciar próxima sesión, revisar:
